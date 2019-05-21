@@ -4,3 +4,6 @@
 
 /.vs
 /graph.network.core/obj
+/graph.network.core.tests/obj
+/graph.network.core/bin
+/graph.network.core.tests/bin
