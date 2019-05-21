@@ -36,5 +36,31 @@ namespace graph.network.core.tests
             var z = new Node("in_z", "to", "c");
             Assert.AreEqual("out_c", gn.Predict(z).ToString());
         }
+
+        public void MultiPathExample()
+        {
+            //set up a simple graph
+            var gn = new GraphNet();
+            gn.Add("a", "to", "z");
+            gn.Add("b", "to", "z");
+            gn.Add("c", "to", "z");
+            gn.Add("z", "to", "out_a", true);
+            gn.Add("x", "to", "out_b", true);
+            gn.Add("z", "to", "out_b", true);
+            gn.Add("z", "to", "out_c", true);
+
+            //create some inputs
+            var a = new Node("in_a", "to", "a");
+            var b = new Node("in_b", "to", "b");
+            a.AddEdge("to", "x");
+            var c = new Node("in_c", "to", "c");
+
+            //train the net with examples of these inputs to outputs
+            gn.Train(new Example(a, "out_a"), new Example(b, "out_b"), new Example(c, "out_c"));
+
+            Assert.AreEqual("out_b", gn.Predict(new Node("test", "to", "x")).ToString());
+            Assert.AreEqual("out_b", gn.Predict(new Node("test", "to", "b")).ToString());
+            Assert.AreEqual("out_c", gn.Predict(new Node("test", "to", "c")).ToString());
+        }
     }
 }

@@ -3,7 +3,6 @@ using ConvNetSharp.Core.Layers.Double;
 using ConvNetSharp.Core.Training;
 using ConvNetSharp.Volume;
 using ConvNetSharp.Volume.Double;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,49 +13,58 @@ namespace graph.network.core
         private readonly List<Node> nodeIndex;
         private readonly List<Node> outputNodes;
         private readonly int numberOfNodes;
-        private readonly int pathLenght;
-        private readonly int numberOfPaths;
+        private readonly int maxPathLenght;
+        private readonly int maxNumberOfPaths;
         private readonly int numberOfClasses;
         private readonly int width;
         private readonly int height;
         private readonly int depth;
-        private List<(NodePath, Node)> _data = new List<(NodePath, Node)>();
+        private List<(List<NodePath>, Node)> _data = new List<(List<NodePath>, Node)>();
         private List<int> lables = new List<int>();
         private List<double[,,]> featureData = new List<double[,,]>();
         private Net<double> net;
 
-        public Net(List<Node> nodeIndex, List<Node> outputNodes)
+        public Net(List<Node> nodeIndex, List<Node> outputNodes, int maxPathLenght = 20, int maxNumberOfPaths = 10)
         {
             this.nodeIndex = nodeIndex;
             this.outputNodes = outputNodes;
             this.numberOfNodes = nodeIndex.Count;
-            this.pathLenght = 20;
-            this.numberOfPaths = 1;
+            this.maxPathLenght = maxPathLenght;
+            this.maxNumberOfPaths = maxNumberOfPaths;
             this.numberOfClasses = outputNodes.Count;
-            this.width = pathLenght;
+            this.width = maxPathLenght;
             this.height = numberOfNodes;
-            this.depth = numberOfPaths;
+            this.depth = maxNumberOfPaths;
         }
+
 
         public void AddToTraining(NodePath path, Node output)
         {
-            _data.Add((path, output));
-            double[,,] data = GetFeatureData(path);
+            AddToTraining(new List<NodePath>{path}, output);
+        }
+        public void AddToTraining(List<NodePath> paths, Node output)
+        {
+            _data.Add((paths, output));
+            double[,,] data = GetFeatureData(paths);
             int lable = outputNodes.IndexOf(output);
             lables.Add(lable);
             featureData.Add(data);
         }
 
-        public double[,,] GetFeatureData(NodePath path)
+        public double[,,] GetFeatureData(List<NodePath> paths)
         {
-            var result = new double[pathLenght, numberOfNodes, numberOfPaths];
-            for (int i = 0; i < path.Count; i++)
+            var result = new double[maxPathLenght, numberOfNodes, maxNumberOfPaths];
+            for (int p = 0; p < paths.Count; p++)
             {
-                Node node = path[i];
-                var index = nodeIndex.IndexOf(node);
-                if (index != -1)
+                var path = paths[p];
+                for (int i = 0; i < path.Count; i++)
                 {
-                    result[i, index, 0] = 1;
+                    Node node = path[i];
+                    var index = nodeIndex.IndexOf(node);
+                    if (index != -1)
+                    {
+                        result[i, index, p] = 1; //just one hot vector at the mo
+                    }
                 }
             }
             return result;
@@ -110,11 +118,14 @@ namespace graph.network.core
                 //Console.WriteLine($"loss {trainer.Loss}");
             }
         }
-
         public double GetProbabilty(NodePath path, Node output)
         {
+            return GetProbabilty(new List<NodePath> { path }, output);
+        }
+        public double GetProbabilty(List<NodePath> paths, Node output)
+        {
             if (!outputNodes.Contains(output)) return 0;
-            var featureData = GetFeatureData(path);
+            var featureData = GetFeatureData(paths);
 
             var shape = new Shape(width, height, depth);
             var data = new double[shape.TotalLength];
