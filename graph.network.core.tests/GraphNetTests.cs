@@ -37,6 +37,7 @@ namespace graph.network.core.tests
             Assert.AreEqual("out_c", gn.Predict(z).ToString());
         }
 
+        [Test]
         public void MultiPathExample()
         {
             //set up a simple graph
@@ -61,6 +62,25 @@ namespace graph.network.core.tests
             Assert.AreEqual("out_b", gn.Predict(new Node("test", "to", "x")).ToString());
             Assert.AreEqual("out_b", gn.Predict(new Node("test", "to", "b")).ToString());
             Assert.AreEqual("out_c", gn.Predict(new Node("test", "to", "c")).ToString());
+        }
+
+        [Test]
+        public void SuperHeros()
+        {
+            var gn = new GraphNet();
+            gn.Add("spider_man", "is_a", "super_hero");
+            gn.Add("hulk", "is_a", "super_hero");
+            gn.Add("green_goblin", "is_a", "super_villain");
+            gn.Add("red_king", "is_a", "super_villain");
+            gn.Add("super_villain", "is_a", "villain");
+            gn.Add("super_hero", "is_a", "hero");
+            gn.Add("hero", "on_the_side_of", "good", true);
+            gn.Add("villain", "on_the_side_of", "bad", true);
+
+            gn.Train(new Example("spider_man", "good"), new Example("green_goblin", "bad"));
+
+            Assert.AreEqual("good", gn.Predict("hulk").ToString());
+            Assert.AreEqual("bad", gn.Predict("red_king").ToString());
         }
     }
 }
