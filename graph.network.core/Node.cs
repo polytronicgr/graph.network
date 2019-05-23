@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace graph.network.core
 {
@@ -15,6 +16,18 @@ namespace graph.network.core
         public object Value { get; }
 
         public List<Edge> Edges { get; } = new List<Edge>();
+
+        /// <summary>
+        /// A node exposes an interface that paths will be calulated from by default the nodes interface is 
+        /// itself if you add Edges then their objects become this nodes interface but the method is virtual 
+        /// so nodes can expose any interface that they wish
+        /// </summary>
+        /// <returns></returns>
+        public virtual IEnumerable<Node> GetInterface()
+        {
+            //TODO: could cache this 
+            return Edges.Count > 0 ? Edges.Select(e => e.Obj) : new List<Node> { this };
+        }
 
         public void AddEdge(string predicate, object obj)
         {

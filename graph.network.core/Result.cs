@@ -4,16 +4,16 @@ namespace graph.network.core
 {
     public class Result
     {
-        public Result(Node input, Node output, NodePath path, double probabilty)
+        public Result(Node input, Node output, List<NodePath> paths, double probabilty)
         {
             Input = input;
             Output = output;
-            Path = path;
+            Paths = paths;
             Probabilty = probabilty;
         }
 
         public double Probabilty { get; }
-        public NodePath Path { get; }
+        public List<NodePath> Paths { get; }
         public Node Output { get; }
         public Node Input { get; }
     }

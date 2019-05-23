@@ -44,36 +44,75 @@ namespace graph.network.core
             allNodes = allNodes.Distinct().ToList();
             net = new Net(allNodes, outputs);
             foreach (Example example in examples) {
-                var path = GetPath(example);
-                if (path != null)
+                var paths = GetPaths(example);
+                if (paths != null && paths.Count != 0)
                 {
-                    net.AddToTraining(path, example.Output);
+                    net.AddToTraining(paths, example.Output);
                 }
             }
             net.Train();
         }
 
-        private NodePath GetPath(Node input, Node output)
+        private List<NodePath> GetPaths(Node input, Node output)
         {
-            return GetPath(new Example(input, output));
+            return GetPaths(new Example(input, output));
         }
-        private NodePath GetPath(Example example)
+        private List<NodePath> GetPaths(Example example)
         {
             var inputAdded = false;
-            if (!graph.ContainsVertex(example.Input))
+            var outputAdded = false;
+            Node input = example.Input;
+            Node output = example.Output;
+
+            //add inputs and outputs on the fly if they are not in the graph
+            if (!graph.ContainsVertex(input))
             {
                 inputAdded = true;
-                Add(example.Input);
+                Add(input);
+            }
+            if (!graph.ContainsVertex(output))
+            {
+                outputAdded = true;
+                Add(output);
             }
 
-            graph.ShortestPathsDijkstra(n => 1, example.Input)(example.Output, out IEnumerable<Edge> path);
+            //get all the paths from the exposed interface of the input node to 
+            //the exposed interface of the output node
+            List<NodePath> results = new List<NodePath>();
+            foreach (var i in input.GetInterface())
+            {
+                foreach (var o in output.GetInterface())
+                {
+                    AddPath(i, o, results);
+                }
+            }
+                      
+            //remove any temp inputs and outputs that were added on the fly
             if (inputAdded)
             {
-                Remove(example.Input);
+                Remove(input);
             }
-            
-            if (path == null) return null;
-            return new NodePath(path);
+            if (outputAdded)
+            {
+                Remove(output);
+            }
+
+            return results;
+        }
+
+        private void AddPath(Node inputInternceNode, Node outputInterfaceNode,List<NodePath> paths)
+        {
+            graph.ShortestPathsDijkstra(n => 1, inputInternceNode)(outputInterfaceNode, out IEnumerable<Edge> path);
+            if (path != null)
+            {
+                NodePath nodePath = new NodePath(path);
+                //if a path travels through another output then it is not valid
+                var passesThroughAnOutput = nodePath.Take(nodePath.Count - 1).Any(n => outputs.Contains(n));
+                if (!passesThroughAnOutput)
+                {
+                    paths.Add(nodePath);
+                }
+            }
         }
 
         public void Remove(Node node)
@@ -104,16 +143,17 @@ namespace graph.network.core
         public List<Result> Rank(Node input)
         {
             var results = new List<Result>();
-            outputs.ForEach(ouput =>
-            {
-                var path = GetPath(input, ouput);
-                var probabilty = net.GetProbabilty(path, ouput);
-                var result = new Result(input, ouput, path, probabilty);
-                results.Add(result);
-            });
-
+            outputs.ForEach(ouput => AddResult(input, ouput, results));
             results.Sort((r1, r2) => r2.Probabilty.CompareTo(r1.Probabilty));
             return results;
+        }
+
+        private void AddResult(Node input, Node ouput, List<Result> results)
+        {
+            var paths = GetPaths(input, ouput);
+            var probabilty = net.GetProbabilty(paths, ouput);
+            var result = new Result(input, ouput, paths, probabilty);
+            results.Add(result);
         }
     }
 }

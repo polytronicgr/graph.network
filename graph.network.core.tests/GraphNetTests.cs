@@ -74,13 +74,16 @@ namespace graph.network.core.tests
             gn.Add("red_king", "is_a", "super_villain");
             gn.Add("super_villain", "is_a", "villain");
             gn.Add("super_hero", "is_a", "hero");
-            gn.Add("hero", "on_the_side_of", "good", true);
-            gn.Add("villain", "on_the_side_of", "bad", true);
+            gn.Add("hero", "is", "good", true);
+            gn.Add("hero", "is_not", "bad", true);
+            gn.Add("villain", "is", "bad", true);
+            gn.Add("villain", "is_not", "good", true);
 
             gn.Train(new Example("spider_man", "good"), new Example("green_goblin", "bad"));
 
             Assert.AreEqual("good", gn.Predict("hulk").ToString());
             Assert.AreEqual("bad", gn.Predict("red_king").ToString());
+            Assert.AreEqual("bad", gn.Predict("green_goblin").ToString());
         }
     }
 }

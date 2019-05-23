@@ -6,11 +6,16 @@ namespace graph.network.core
     {
         public NodePath(IEnumerable<Edge> collection)
         {
+            Node lastObj = null;
             foreach (var edge in collection)
             {
-                Add(edge.Source);
+                if (lastObj  == null || !lastObj.Equals(edge.Source))
+                {
+                    Add(edge.Source);
+                }
                 Add(edge.Predicate);
                 Add(edge.Obj);
+                lastObj = edge.Obj;
             }
         }
     }
