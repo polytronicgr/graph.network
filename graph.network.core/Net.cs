@@ -120,10 +120,12 @@ namespace graph.network.core
         }
         public double GetProbabilty(NodePath path, Node output)
         {
+            if (path == null) return 0;
             return GetProbabilty(new List<NodePath> { path }, output);
         }
         public double GetProbabilty(List<NodePath> paths, Node output)
         {
+            if (paths.Count == 0) return 0;
             if (!outputNodes.Contains(output)) return 0;
             var featureData = GetFeatureData(paths);
 

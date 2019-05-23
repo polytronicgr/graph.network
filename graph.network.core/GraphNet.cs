@@ -90,6 +90,11 @@ namespace graph.network.core
             }
         }
 
+        public Node Predict(string input)
+        {
+            return Predict(new Node(input));
+        }
+
         public Node Predict(Node input)
         {
             List<Result> results = Rank(input);
