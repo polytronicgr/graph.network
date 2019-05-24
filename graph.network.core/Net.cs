@@ -3,6 +3,8 @@ using ConvNetSharp.Core.Layers.Double;
 using ConvNetSharp.Core.Training;
 using ConvNetSharp.Volume;
 using ConvNetSharp.Volume.Double;
+using graph.network.core.nodes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,7 +26,7 @@ namespace graph.network.core
         private List<double[,,]> featureData = new List<double[,,]>();
         private Net<double> net;
 
-        public Net(List<Node> nodeIndex, List<Node> outputNodes, int maxPathLenght = 20, int maxNumberOfPaths = 10)
+        public Net(List<Node> nodeIndex, List<Node> outputNodes, int maxPathLenght, int maxNumberOfPaths)
         {
             this.nodeIndex = nodeIndex;
             this.outputNodes = outputNodes;
@@ -54,11 +56,13 @@ namespace graph.network.core
         public double[,,] GetFeatureData(List<NodePath> paths)
         {
             var result = new double[maxPathLenght, numberOfNodes, maxNumberOfPaths];
+            if (paths.Count >= maxNumberOfPaths) throw new InvalidOperationException("too many paths");
             for (int p = 0; p < paths.Count; p++)
             {
                 var path = paths[p];
                 for (int i = 0; i < path.Count; i++)
                 {
+                    if (path.Count >= maxPathLenght) throw new InvalidOperationException("path is too long");
                     Node node = path[i];
                     var index = nodeIndex.IndexOf(node);
                     if (index != -1)

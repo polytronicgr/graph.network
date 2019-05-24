@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace graph.network.core
+namespace graph.network.core.nodes
 {
     public class Node
     {
-        public Node(string subject, string predicate, string obj): this(subject) {
+        public Node(string subject, string predicate, string obj) : this(subject)
+        {
             AddEdge(predicate, obj);
         }
         public Node(object value)
@@ -15,7 +16,21 @@ namespace graph.network.core
 
         public object Value { get; }
 
-        public List<Edge> Edges { get; } = new List<Edge>();
+        public virtual void OnAdd(GraphNet graph)
+        {
+            Edges.ForEach(e => graph.Add(e));
+        }
+
+        public virtual void OnRemove(GraphNet graph)
+        {
+            Edges.ForEach(e => graph.Remove(e));
+        }
+
+        public virtual void OnTrain(GraphNet graph)
+        {
+        }
+
+        public virtual List<Edge> Edges { get; set; } = new List<Edge>();
 
         /// <summary>
         /// A node exposes an interface that paths will be calulated from by default the nodes interface is 
@@ -23,7 +38,7 @@ namespace graph.network.core
         /// so nodes can expose any interface that they wish
         /// </summary>
         /// <returns></returns>
-        public virtual IEnumerable<Node> GetInterface()
+        public IEnumerable<Node> GetInterface()
         {
             //TODO: could cache this 
             return Edges.Count > 0 ? Edges.Select(e => e.Obj) : new List<Node> { this };
@@ -31,7 +46,7 @@ namespace graph.network.core
 
         public void AddEdge(string predicate, object obj)
         {
-            Edges.Add(new Edge(this,new Node(predicate), new Node(obj)));
+            Edges.Add(new Edge(this, new Node(predicate), new Node(obj)));
         }
 
         public override string ToString()
@@ -41,9 +56,9 @@ namespace graph.network.core
 
         public override bool Equals(object obj)
         {
-            if (Value==null && obj != null) return false;
-            if (Value!=null && obj == null) return false;
-            if (Value==null && obj == null) return true;
+            if (Value == null && obj != null) return false;
+            if (Value != null && obj == null) return false;
+            if (Value == null && obj == null) return true;
             if (Value.Equals(obj)) return true;
             Node node = obj as Node;
             if (node?.Value != null && Value.Equals(node.Value)) return true;

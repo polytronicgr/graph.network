@@ -1,6 +1,8 @@
-﻿using graph.network.core.tests;
+﻿using graph.network.core.nodes;
+using graph.network.core.tests;
 using QuickGraph;
 using QuickGraph.Algorithms;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,7 +13,16 @@ namespace graph.network.core
         UndirectedGraph<Node, Edge> graph = new UndirectedGraph<Node, Edge>();
         List<Node> outputs = new List<Node>();
         Net net;
-        public void Add(object subject , string predicate, object obj)
+        private readonly int maxPathLenght;
+        private readonly int maxNumberOfPaths;
+
+        public GraphNet(int maxPathLenght = 20, int maxNumberOfPaths = 10)
+        {
+            this.maxPathLenght = maxPathLenght;
+            this.maxNumberOfPaths = maxNumberOfPaths;
+        }
+
+        public void Add(object subject, string predicate, object obj)
         {
             Add(new Edge(new Node(subject), new Node(predicate), new Node(obj)));
         }
@@ -19,21 +30,25 @@ namespace graph.network.core
         public void Add(object subject, string predicate, object obj, bool isOutput)
         {
             var output = new Node(obj);
+            Add(output, isOutput);
             Add(new Edge(new Node(subject), new Node(predicate), output));
-            if (isOutput && !outputs.Contains(output))
-            {
-                outputs.Add(output);
-            }
         }
 
-        public void Add(Node node)
+        public void Add(Node node, bool isOutput)
         {
+            if (isOutput && !outputs.Contains(node))
+            {
+                outputs.Add(node);
+            }
+            if (graph.ContainsVertex(node)) return;
             graph.AddVertex(node);
-            node.Edges.ForEach(e => Add(e));
+            node.OnAdd(this);
         }
-
+        
         public void Add(Edge edge)
         {
+            Add(edge.Subject, false);
+            Add(edge.Obj, false);
             graph.AddVerticesAndEdge(edge);
         }
 
@@ -42,8 +57,9 @@ namespace graph.network.core
             var allNodes = new List<Node>(graph.Vertices);
             allNodes.AddRange(graph.Edges.Select(e => e.Predicate).Distinct());
             allNodes = allNodes.Distinct().ToList();
-            net = new Net(allNodes, outputs);
-            foreach (Example example in examples) {
+            net = new Net(allNodes, outputs, maxPathLenght, maxNumberOfPaths);
+            foreach (Example example in examples)
+            {
                 var paths = GetPaths(example);
                 if (paths != null && paths.Count != 0)
                 {
@@ -68,12 +84,13 @@ namespace graph.network.core
             if (!graph.ContainsVertex(input))
             {
                 inputAdded = true;
-                Add(input);
+                Add(input, false);
+                output = GetNode(output.Value); //TODO: remove this
             }
             if (!graph.ContainsVertex(output))
             {
                 outputAdded = true;
-                Add(output);
+                Add(output, true);
             }
 
             //get all the paths from the exposed interface of the input node to 
@@ -86,7 +103,7 @@ namespace graph.network.core
                     AddPath(i, o, results);
                 }
             }
-                      
+
             //remove any temp inputs and outputs that were added on the fly
             if (inputAdded)
             {
@@ -95,20 +112,22 @@ namespace graph.network.core
             if (outputAdded)
             {
                 Remove(output);
+                outputs.Remove(output);
             }
 
             return results;
         }
 
-        private void AddPath(Node inputInternceNode, Node outputInterfaceNode,List<NodePath> paths)
+        private void AddPath(Node inputInternceNode, Node outputInterfaceNode, List<NodePath> paths)
         {
             graph.ShortestPathsDijkstra(n => 1, inputInternceNode)(outputInterfaceNode, out IEnumerable<Edge> path);
             if (path != null)
             {
                 NodePath nodePath = new NodePath(path);
                 //if a path travels through another output then it is not valid
-                var passesThroughAnOutput = nodePath.Take(nodePath.Count - 1).Any(n => outputs.Contains(n));
-                if (!passesThroughAnOutput)
+                var passesThroughAnOutput = nodePath.Skip(1).Take(nodePath.Count - 2).Any(n => outputs.Contains(n));
+                var passesThroughAnOutputx = nodePath.Take(nodePath.Count - 1).Any(n => outputs.Contains(n));
+                if (!passesThroughAnOutput && !nodePath.HasLoop) //&& !nodePath.HasLoop
                 {
                     paths.Add(nodePath);
                 }
@@ -117,7 +136,7 @@ namespace graph.network.core
 
         public void Remove(Node node)
         {
-            node.Edges.ForEach(e => Remove(e));
+            node.OnRemove(this);
             graph.RemoveVertex(node);
         }
 
@@ -154,6 +173,12 @@ namespace graph.network.core
             var probabilty = net.GetProbabilty(paths, ouput);
             var result = new Result(input, ouput, paths, probabilty);
             results.Add(result);
+        }
+
+        public Node GetNode(object value)
+        {
+            Node node = graph.Vertices.First(v => v.Value.Equals(value));
+            return node;
         }
     }
 }

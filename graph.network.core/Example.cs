@@ -1,4 +1,6 @@
-﻿namespace graph.network.core.tests
+﻿using graph.network.core.nodes;
+
+namespace graph.network.core.tests
 {
     public class Example
     {

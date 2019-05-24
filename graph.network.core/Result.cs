@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using graph.network.core.nodes;
+using System.Collections.Generic;
 
 namespace graph.network.core
 {
