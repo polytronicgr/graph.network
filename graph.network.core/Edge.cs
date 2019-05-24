@@ -3,7 +3,7 @@ using QuickGraph;
 
 namespace graph.network.core
 {
-    public class Edge : TaggedUndirectedEdge<Node, Node>
+    public class Edge : TaggedEdge<Node, Node>
     {
         public Edge(string subject, string predicate, string obj) : this(new Node(subject), new Node(predicate), new Node(obj)) { }
 
@@ -12,8 +12,6 @@ namespace graph.network.core
             Subject = subject;
             Predicate = predicate;
             Obj = obj;
-            //QuickGraph.TaggedUndirectedEdge<string, string> edge;
-            //this.edge = new QuickGraph.TaggedUndirectedEdge<string, string>()
         }
 
         public Node Subject { get; }

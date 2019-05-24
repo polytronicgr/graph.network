@@ -10,7 +10,7 @@ namespace graph.network.core
 {
     public class GraphNet
     {
-        UndirectedGraph<Node, Edge> graph = new UndirectedGraph<Node, Edge>();
+        BidirectionalGraph<Node, Edge> graph = new BidirectionalGraph<Node, Edge>();
         List<Node> outputs = new List<Node>();
         Net net;
         private readonly int maxPathLenght;
@@ -120,18 +120,23 @@ namespace graph.network.core
 
         private void AddPath(Node inputInternceNode, Node outputInterfaceNode, List<NodePath> paths)
         {
-            graph.ShortestPathsDijkstra(n => 1, inputInternceNode)(outputInterfaceNode, out IEnumerable<Edge> path);
-            if (path != null)
+            IEnumerable <IEnumerable<Edge>> found = graph.RankedShortestPathHoffmanPavley(n => 1, inputInternceNode, outputInterfaceNode, 10);
+            foreach (var path in found)
             {
-                NodePath nodePath = new NodePath(path);
-                //if a path travels through another output then it is not valid
-                var passesThroughAnOutput = nodePath.Skip(1).Take(nodePath.Count - 2).Any(n => outputs.Contains(n));
-                var passesThroughAnOutputx = nodePath.Take(nodePath.Count - 1).Any(n => outputs.Contains(n));
-                if (!passesThroughAnOutput && !nodePath.HasLoop) //&& !nodePath.HasLoop
+                if (path != null)
                 {
-                    paths.Add(nodePath);
+                    NodePath nodePath = new NodePath(path);
+                    //if a path travels through another output then it is not valid
+                    var passesThroughAnOutput = nodePath.Skip(1).Take(nodePath.Count - 2).Any(n => outputs.Contains(n));
+                    var passesThroughAnOutputx = nodePath.Take(nodePath.Count - 1).Any(n => outputs.Contains(n));
+                    if (!passesThroughAnOutput && !nodePath.HasLoop) //&& !nodePath.HasLoop
+                    {
+                        paths.Add(nodePath);
+                        return;
+                    }
                 }
             }
+
         }
 
         public void Remove(Node node)
@@ -179,6 +184,18 @@ namespace graph.network.core
         {
             Node node = graph.Vertices.First(v => v.Value.Equals(value));
             return node;
+        }
+
+        public bool IsEdgesEmpty(object value)
+        {
+            Node node = graph.Vertices.First(v => v.Value.Equals(value));
+            return IsEdgesEmpty(node);
+
+        }
+
+        public bool IsEdgesEmpty(Node node)
+        {
+            return graph.IsOutEdgesEmpty(node) && graph.IsInEdgesEmpty(node);
         }
     }
 }

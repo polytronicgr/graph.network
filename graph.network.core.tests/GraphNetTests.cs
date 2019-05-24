@@ -89,8 +89,8 @@ namespace graph.network.core.tests
             Assert.AreEqual("out_c", gn.Predict(new Node("test", "to", "c")).ToString());
         }
 
-        [Test,Ignore("not working yet")]
-        public void ComplexNodes()
+        [Test] 
+        public void SimpleQuestionAndAnswer()
         {
             //cerate a small knowlage graph with information about areas
             var gn = new GraphNet(maxNumberOfPaths:100);
@@ -100,15 +100,17 @@ namespace graph.network.core.tests
             gn.Add("paris", "capital_of", "france");
             gn.Add("uk", "is_a", "country");
             gn.Add("britain", "same_as", "uk");
-            gn.Add("france", "is_a", "country");
+            gn.Add("lon", "same_as", "london");
             gn.Add("france", "is_a", "country");
             //it also has a couple of output nodes for answering yes/no questions
             gn.Add(new Node(true), true);
             gn.Add(new Node(false), true);
 
-            //this is a NLP tokeniser that creates an node for each word in string and 
-            //also adds these words to the true and false output nodes so that we can
-            //map the paths between words and thus say if a statement is true or false
+            //nodes can be complex and add and remove other nodes and edges from the graph
+            //this is a NLP tokeniser that creates an node for each word in a string and 
+            //then also adds these words to the true and false output nodes so that we can
+            //map the paths between words and thus say if a statement is true or false based
+            //on the knowlage contained in the graph
             Action<Node, GraphNet> tokeniser = (node, graph) => {
                 //create an edge for every word
                 List<Edge> words = node.Value.ToString().Split(' ')
@@ -137,7 +139,14 @@ namespace graph.network.core.tests
                 graph.GetNode(true).Edges.ForEach(e => graph.Remove(e));
                 graph.GetNode(false).Edges.ForEach(e => graph.Remove(e));
                 //finally clear the word nodes themselves
-                node.Edges.ForEach(e => graph.Remove(e.Obj));
+                node.Edges.ForEach(e => 
+                {
+                    //(as long as they are not entities in the knowlage graph!)
+                    if (graph.IsEdgesEmpty(e.Obj))
+                    {
+                        graph.Remove(e.Obj);
+                    }
+                });
             };
 
             //train some examples of true and falase statments 
@@ -146,13 +155,18 @@ namespace graph.network.core.tests
                 ,new Example(new DynamicNode("london is the caplital of uk", tokeniser, onRemove), new Node(true))
                 ,new Example(new DynamicNode("london is a country", tokeniser, onRemove), new Node(false))
                 ,new Example(new DynamicNode("uk is a country", tokeniser, onRemove), new Node(true))
+                ,new Example(new DynamicNode("britain is a country", tokeniser, onRemove), new Node(true))
+                ,new Example(new DynamicNode("britain is a city", tokeniser, onRemove), new Node(false))
                 ,new Example(new DynamicNode("uk is a city", tokeniser, onRemove), new Node(false))
-                );
+            );
             
-            //List<Result> list = gn.Rank(new NodeEdgeBuilder("paris is a country", tokeniser, onRemove));
-            //now we can ask questions about entities from the graph that the training has not seen
+            //now we can ask questions about entities that are in the knowlage graph but the training has not seen
             Assert.AreEqual("True", gn.Predict(new DynamicNode("paris is a city", tokeniser, onRemove)).ToString());
             Assert.AreEqual("False", gn.Predict(new DynamicNode("paris is a country", tokeniser, onRemove)).ToString());
+            Assert.AreEqual("True", gn.Predict(new DynamicNode("is france a country ?", tokeniser, onRemove)).ToString());
+            Assert.AreEqual("False", gn.Predict(new DynamicNode("france is a city", tokeniser, onRemove)).ToString());
+            Assert.AreEqual("True", gn.Predict(new DynamicNode("lon is a city", tokeniser, onRemove)).ToString());
+            //TOOD: this example may require path convolution and a deeper net (lon is london + london not a country) Assert.AreEqual("False", gn.Predict(new DynamicNode("lon is a country", tokeniser, onRemove)).ToString());
         }
 
         
