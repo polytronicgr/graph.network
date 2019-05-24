@@ -7,3 +7,5 @@
 /graph.network.core.tests/obj
 /graph.network.core/bin
 /graph.network.core.tests/bin
+/graph.network.wpf.app/obj
+/graph.network.wpf.lib/obj
