@@ -5,8 +5,6 @@ namespace graph.network.core
 {
     public class Edge : TaggedEdge<Node, Node>
     {
-        public Edge(string subject, string predicate, string obj) : this(new Node(subject), new Node(predicate), new Node(obj)) { }
-
         public Edge(Node subject, Node predicate, Node obj) : base(subject, obj, predicate)
         {
             Subject = subject;
@@ -17,5 +15,6 @@ namespace graph.network.core
         public Node Subject { get; }
         public Node Predicate { get; }
         public Node Obj { get; }
+        public bool Internal { get; set; }
     }
 }

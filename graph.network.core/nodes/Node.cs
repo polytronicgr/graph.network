@@ -1,36 +1,82 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace graph.network.core.nodes
 {
     public class Node
     {
-        public Node(string subject, string predicate, string obj) : this(subject)
-        {
-            AddEdge(predicate, obj);
-        }
-        public Node(object value)
+        Dictionary<string, object> properties = new Dictionary<string, object>();
+ 
+        protected Node(object value)
         {
             Value = value;
+        }
+
+        public static Node NewNode(string subject, string predicate, string obj, Dictionary<object, Node> nodeIndex) 
+        {
+            var node = NewNode(subject, nodeIndex);
+            node.AddEdge(predicate, obj, nodeIndex);
+            return node;
+        }
+        public static Node NewNode(object value, Dictionary<object,Node> nodeIndex)
+        {
+            if (nodeIndex.ContainsKey(value)) return nodeIndex[value];
+            var node = new Node(value);
+            nodeIndex[value] = node;
+            return node;
         }
 
         public object Value { get; }
 
         public virtual void OnAdd(GraphNet graph)
         {
-            Edges.ForEach(e => graph.Add(e));
+            BaseOnAdd(this, graph);
+        }
+
+        public static void BaseOnAdd(Node node, GraphNet graph)
+        {
+            node.Edges.ForEach(e => graph.Add(e));
+        }
+
+        public virtual void OnProcess(GraphNet graph, List<NodePath> results)
+        {
         }
 
         public virtual void OnRemove(GraphNet graph)
         {
-            Edges.ForEach(e => graph.Remove(e));
+            foreach (var e in Edges)
+            {
+                graph.Remove(e);
+            }
+
+            if (RemoveOrphanedEdgeObjs)
+            {
+                Edges.ForEach(e =>
+                {
+                    if (graph.ContainsNode(e.Obj) && (e.Internal || graph.IsEdgesEmpty(e.Obj) ) )
+                    {
+                        graph.Remove(e.Obj);
+                    }
+                });
+            }
         }
 
-        public virtual void OnTrain(GraphNet graph)
+        public virtual bool IsPathValid(GraphNet graph, NodePath path)
         {
+            return BaseIsPathValid(graph, path);
+        }
+
+        public static bool BaseIsPathValid(GraphNet graph, NodePath path)
+        {
+            if (path.HasLoop) return false;
+            var passesThroughAnOutput = path.Skip(1).Take(path.Count - 2).Any(n => graph.Outputs.Contains(n));
+            return !passesThroughAnOutput;
         }
 
         public virtual List<Edge> Edges { get; set; } = new List<Edge>();
+        public virtual bool RemoveOrphanedEdgeObjs { get; set; } = true;
+        public object Result { get; set; }
 
         /// <summary>
         /// A node exposes an interface that paths will be calulated from by default the nodes interface is 
@@ -44,9 +90,26 @@ namespace graph.network.core.nodes
             return Edges.Count > 0 ? Edges.Select(e => e.Obj) : new List<Node> { this };
         }
 
-        public void AddEdge(string predicate, object obj)
+        public Node AddEdge(string predicate, object obj, Dictionary<object, Node> nodeIndex)
         {
-            Edges.Add(new Edge(this, new Node(predicate), new Node(obj)));
+            return AddEdge(predicate, NewNode(obj, nodeIndex), nodeIndex);
+        }
+
+        public Node AddEdge(string predicate, Node obj, Dictionary<object, Node> nodeIndex)
+        {
+            return AddEdge(NewNode(predicate, nodeIndex), obj);
+        }
+
+        public Node AddEdge(Node predicate, Node obj)
+        {
+            Edges.Add(new Edge(this, predicate, obj));
+            return obj;
+        }
+
+        public Node AddEdge(Edge edge)
+        {
+            Edges.Add(edge);
+            return edge.Obj;
         }
 
         public override string ToString()
@@ -54,6 +117,7 @@ namespace graph.network.core.nodes
             return Value?.ToString();
         }
 
+        /*
         public override bool Equals(object obj)
         {
             if (Value == null && obj != null) return false;
@@ -69,6 +133,23 @@ namespace graph.network.core.nodes
         public override int GetHashCode()
         {
             return Value.GetHashCode();
+        }
+        */
+
+        public Edge GetEdgeByPredicate(object value)
+        {
+            return Edges.First(e => e.Predicate.Value == value);
+        }
+
+        public void SetProp(string name, object value)
+        {
+            properties[name] = value;
+        }
+
+        public T GetProp<T>(string name)
+        {
+            if (!properties.ContainsKey(name)) return default;
+            return (T)properties[name];
         }
     }
 }

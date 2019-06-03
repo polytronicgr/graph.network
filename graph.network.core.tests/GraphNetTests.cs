@@ -9,6 +9,13 @@ namespace graph.network.core.tests
     [TestFixture]
     public class GraphNetTests
     {
+        //TODO: review all changes, run tests again and then checkin
+        //TODO: review all todos 
+        //TODO: look at the NewNode thing and try to simplify 
+        //TODO: look at test and see how things can be simplifed
+        //TODO: add UI
+        //TODO: performace test
+        //TODO: add a test of a nested GraphNet
 
         [Test]
         public void SuperHeros()
@@ -25,11 +32,12 @@ namespace graph.network.core.tests
             gn.Add("villain", "is", "bad", true);
             gn.Add("villain", "is_not", "good", true);
 
-            gn.Train(new Example("spider_man", "good"), new Example("green_goblin", "bad"));
+            gn.Train(gn.NewExample("spider_man", "good"), gn.NewExample("green_goblin", "bad"));
 
             Assert.AreEqual("good", gn.Predict("hulk").ToString());
             Assert.AreEqual("bad", gn.Predict("red_king").ToString());
         }
+
         [Test]
         public void BasicExample()
         {
@@ -43,22 +51,22 @@ namespace graph.network.core.tests
             gn.Add("z", "to", "out_c", true);
 
             //create some inputs
-            var a = new Node("in_a", "to", "a");
-            var b = new Node("in_b", "to", "b");
-            var c = new Node("in_c", "to", "c");
+            var a = gn.NewNode("in_a", "to", "a");
+            var b = gn.NewNode("in_b", "to", "b");
+            var c = gn.NewNode("in_c", "to", "c");
 
             //train the net with examples of these inputs to outputs
-            gn.Train(new Example(a, "out_a"), new Example(b, "out_b"), new Example(c, "out_c"));
+            gn.Train(gn.NewExample(a, "out_a"), gn.NewExample(b, "out_b"), gn.NewExample(c, "out_c"));
 
             //create a new input that it has not see but connects to the 'a' node in the graph
-            var x = new Node("in_x", "to", "a");
+            var x = gn.NewNode("in_x", "to", "a");
             //the prediction should be that the output is out_a
             Assert.AreEqual("out_a", gn.Predict(x).ToString());
             //same for 'b'
-            var y = new Node("in_y", "to", "b");
+            var y = gn.NewNode("in_y", "to", "b");
             Assert.AreEqual("out_b", gn.Predict(y).ToString());
             //same for 'b'
-            var z = new Node("in_z", "to", "c");
+            var z = gn.NewNode("in_z", "to", "c");
             Assert.AreEqual("out_c", gn.Predict(z).ToString());
         }
 
@@ -76,24 +84,24 @@ namespace graph.network.core.tests
             gn.Add("z", "to", "out_c", true);
 
             //create some inputs
-            var a = new Node("in_a", "to", "a");
-            var b = new Node("in_b", "to", "b");
-            a.AddEdge("to", "x");
-            var c = new Node("in_c", "to", "c");
+            var a = gn.NewNode("in_a", "to", "a");
+            var b = gn.NewNode("in_b", "to", "b");
+            a.AddEdge("to", "x", gn.NodeIndex);
+            var c = gn.NewNode("in_c", "to", "c");
 
             //train the net with examples of these inputs to outputs
-            gn.Train(new Example(a, "out_a"), new Example(b, "out_b"), new Example(c, "out_c"));
+            gn.Train(gn.NewExample(a, "out_a"), gn.NewExample(b, "out_b"), gn.NewExample(c, "out_c"));
 
-            Assert.AreEqual("out_b", gn.Predict(new Node("test", "to", "x")).ToString());
-            Assert.AreEqual("out_b", gn.Predict(new Node("test", "to", "b")).ToString());
-            Assert.AreEqual("out_c", gn.Predict(new Node("test", "to", "c")).ToString());
+            Assert.AreEqual("out_b", gn.Predict(gn.NewNode("test", "to", "x")).ToString());
+            Assert.AreEqual("out_b", gn.Predict(gn.NewNode("test", "to", "b")).ToString());
+            Assert.AreEqual("out_c", gn.Predict(gn.NewNode("test", "to", "c")).ToString());
         }
 
-        [Test] 
+        [Test]
         public void SimpleQuestionAndAnswer()
         {
             //cerate a small knowlage graph with information about areas
-            var gn = new GraphNet(maxNumberOfPaths:100);
+            var gn = new GraphNet(maxNumberOfPaths: 100);
             gn.Add("london", "is_a", "city");
             gn.Add("london", "capital_of", "uk");
             gn.Add("paris", "is_a", "city");
@@ -103,19 +111,20 @@ namespace graph.network.core.tests
             gn.Add("lon", "same_as", "london");
             gn.Add("france", "is_a", "country");
             //it also has a couple of output nodes for answering yes/no questions
-            gn.Add(new Node(true), true);
-            gn.Add(new Node(false), true);
+            gn.Add(gn.Node(true), true);
+            gn.Add(gn.Node(false), true);
 
             //nodes can be complex and add and remove other nodes and edges from the graph
             //this is a NLP tokeniser that creates an node for each word in a string and 
             //then also adds these words to the true and false output nodes so that we can
             //map the paths between words and thus say if a statement is true or false based
             //on the knowlage contained in the graph
-            Action<Node, GraphNet> tokeniser = (node, graph) => {
+            Action<Node, GraphNet> tokeniser = (node, graph) =>
+            {
                 //create an edge for every word
                 List<Edge> words = node.Value.ToString().Split(' ')
                 .Select(
-                    s => new Edge(node, new Node("word"), new Node(s)))
+                    s => new Edge(node, gn.Node("word"), gn.Node(s)))
                 .ToList();
                 //set these to be the edges of this node
                 node.Edges = words;
@@ -132,14 +141,15 @@ namespace graph.network.core.tests
             };
 
             //we also need to remove these nodes afterwards
-            Action<Node, GraphNet> onRemove = (node, graph) => {
+            Action<Node, GraphNet> onRemove = (node, graph) =>
+            {
                 //clear the edges from this
                 node.Edges.ForEach(e => graph.Remove(e));
                 //clear the mirrored dynamic output edges too
                 graph.GetNode(true).Edges.ForEach(e => graph.Remove(e));
                 graph.GetNode(false).Edges.ForEach(e => graph.Remove(e));
                 //finally clear the word nodes themselves
-                node.Edges.ForEach(e => 
+                node.Edges.ForEach(e =>
                 {
                     //(as long as they are not entities in the knowlage graph!)
                     if (graph.IsEdgesEmpty(e.Obj))
@@ -151,15 +161,15 @@ namespace graph.network.core.tests
 
             //train some examples of true and falase statments 
             gn.Train(
-                 new Example(new DynamicNode("london is a city", tokeniser, onRemove), new Node(true))
-                ,new Example(new DynamicNode("london is the caplital of uk", tokeniser, onRemove), new Node(true))
-                ,new Example(new DynamicNode("london is a country", tokeniser, onRemove), new Node(false))
-                ,new Example(new DynamicNode("uk is a country", tokeniser, onRemove), new Node(true))
-                ,new Example(new DynamicNode("britain is a country", tokeniser, onRemove), new Node(true))
-                ,new Example(new DynamicNode("britain is a city", tokeniser, onRemove), new Node(false))
-                ,new Example(new DynamicNode("uk is a city", tokeniser, onRemove), new Node(false))
+                 new Example(new DynamicNode("london is a city", tokeniser, onRemove), gn.Node(true))
+                , new Example(new DynamicNode("london is the caplital of uk", tokeniser, onRemove), gn.Node(true))
+                , new Example(new DynamicNode("london is a country", tokeniser, onRemove), gn.Node(false))
+                , new Example(new DynamicNode("uk is a country", tokeniser, onRemove), gn.Node(true))
+                , new Example(new DynamicNode("britain is a country", tokeniser, onRemove), gn.Node(true))
+                , new Example(new DynamicNode("britain is a city", tokeniser, onRemove), gn.Node(false))
+                , new Example(new DynamicNode("uk is a city", tokeniser, onRemove), gn.Node(false))
             );
-            
+
             //now we can ask questions about entities that are in the knowlage graph but the training has not seen
             Assert.AreEqual("True", gn.Predict(new DynamicNode("paris is a city", tokeniser, onRemove)).ToString());
             Assert.AreEqual("False", gn.Predict(new DynamicNode("paris is a country", tokeniser, onRemove)).ToString());
@@ -169,6 +179,102 @@ namespace graph.network.core.tests
             //TOOD: this example may require path convolution and a deeper net (lon is london + london not a country) Assert.AreEqual("False", gn.Predict(new DynamicNode("lon is a country", tokeniser, onRemove)).ToString());
         }
 
-        
+        [Test]
+        public void Calculator()
+        {
+            //small graph of operators
+            var gn = new GraphNet(maxNumberOfPaths: 100);
+            gn.Add(gn.Node("number"));
+            gn.Add("+", "a", "operand");
+            gn.Add("-", "a", "operand");
+            gn.Add("*", "a", "operand");
+            gn.Add("x", "same_as", "*");
+
+            //to run the calculations we will need:
+
+            //(1) a NLP the input will add nodes for words add mark any of those words that are numbers 
+            Action<Node, GraphNet> tokeniser = (node, graph) =>
+            {
+                node.Edges.Clear(); //TODO: why do i need to clear??
+                string[] words = node.Value.ToString().Split(' ');
+                var edges = new List<Edge>();
+                foreach (var word in words)
+                {
+                    Node wordNode = gn.Node(word.Trim());
+                    var edge = new Edge(node, gn.Node("word"), wordNode);
+                    if (word.All(char.IsDigit))
+                    {
+                        edge.Internal = true;
+                        var linkNumber = new Edge(wordNode, gn.Node("a"), gn.Node("number"));
+                        wordNode.AddEdge(linkNumber);
+                    }
+                    node.Edges.Add(edge);
+                }
+                Node.BaseOnAdd(node, graph);
+            };
+
+            //(2) some output nodes that will be able to do the maths
+            Action<Node, GraphNet, List<NodePath>> calculate = (node, graph, paths) =>
+            {
+                //get the x and y edges and their results
+                var x1 = node.GetEdgeByPredicate("param1").Obj;
+                var x = (decimal?)node.GetEdgeByPredicate("param1").Obj.Result;
+                var y = (decimal?)node.GetEdgeByPredicate("param2").Obj.Result;
+                //if they do not have numser then this node is not valid
+                if (x == null || y == null)
+                {
+                    paths.Clear(); // none of these paths is valid
+                }
+                //otherwise do the maths and store the result
+                else if (node.Value.ToString() == "add")
+                {
+                    node.Result = x + y;
+                }
+                else if (node.Value.ToString() == "minus")
+                {
+                    node.Result = x - y;
+                }
+            };
+
+            //(3) some special nodes for the params that can pull numbers from the paths to them
+            Func<Node, GraphNet, NodePath, bool> extractNumber = (node, graph, path) =>
+            {
+                //node.Result = null;
+                if (!Node.BaseIsPathValid(graph, path)) return false;
+                foreach (var n in path)
+                {
+                    if (n.Value.ToString().All(char.IsDigit) && !n.GetProp<bool>("used"))
+                    {
+                        node.Result = decimal.Parse(n.Value.ToString());
+                        n.SetProp("used", true);
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            //add these complex ouput nodes
+            var add = new DynamicNode("add", onProcess: calculate);
+            add.AddEdge("param1", new DynamicNode("add_x", isPathValid: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
+            add.AddEdge("param2", new DynamicNode("add_y", isPathValid: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
+            add.AddEdge("opp", "+", gn.NodeIndex);
+            gn.Add(add, true);
+
+            var minus = new DynamicNode("minus", onProcess: calculate);
+            minus.AddEdge("param1", new DynamicNode("minus_x", isPathValid: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
+            minus.AddEdge("param2", new DynamicNode("minus_y", isPathValid: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
+            minus.AddEdge("opp", "-", gn.NodeIndex);
+            gn.Add(minus, true);
+
+            //teach it the basic maths funcitons
+            gn.Train(
+                    new Example(new DynamicNode("1 + 2", tokeniser), add),
+                    new Example(new DynamicNode("1 - 2", tokeniser), minus)
+            );
+
+            //test
+            Assert.AreEqual(15, gn.Predict(new DynamicNode("5 + 10", tokeniser)).Result);
+            Assert.AreEqual(2, gn.Predict(new DynamicNode("5 - 3", tokeniser)).Result);
+        }
     }
-}
+ }

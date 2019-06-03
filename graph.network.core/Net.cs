@@ -129,6 +129,7 @@ namespace graph.network.core
         }
         public double GetProbabilty(List<NodePath> paths, Node output)
         {
+            if (net == null) return 0;
             if (paths.Count == 0) return 0;
             if (!outputNodes.Contains(output)) return 0;
             var featureData = GetFeatureData(paths);

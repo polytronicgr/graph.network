@@ -10,37 +10,68 @@ namespace graph.network.core
 {
     public class GraphNet
     {
-        BidirectionalGraph<Node, Edge> graph = new BidirectionalGraph<Node, Edge>();
-        List<Node> outputs = new List<Node>();
-        Net net;
+        private BidirectionalGraph<Node, Edge> graph = new BidirectionalGraph<Node, Edge>();
+        private Net net;
         private readonly int maxPathLenght;
         private readonly int maxNumberOfPaths;
+        private Dictionary<object, Node> nodeIndex = new Dictionary<object, Node>();
+
+        public List<Node> Outputs { get; set; } = new List<Node>();
+        public Dictionary<object, Node> NodeIndex { get => nodeIndex; set => nodeIndex = value; }
 
         public GraphNet(int maxPathLenght = 20, int maxNumberOfPaths = 10)
         {
             this.maxPathLenght = maxPathLenght;
             this.maxNumberOfPaths = maxNumberOfPaths;
+            
+        }
+        
+        public Node NewNode(string subject, string predicate, string obj)
+        {
+            return nodes.Node.NewNode(subject, predicate, obj, NodeIndex);
+        }
+        public Node Node(object value)
+        {
+            return nodes.Node.NewNode(value, NodeIndex);
+        }
+
+        public Example NewExample(string input, string output)
+        {
+            return new Example(nodes.Node.NewNode(input, NodeIndex), nodes.Node.NewNode(output, NodeIndex) );
+        }
+
+        public Example NewExample(Node input, string output) 
+        {
+            return new Example(input, nodes.Node.NewNode(output, NodeIndex));
         }
 
         public void Add(object subject, string predicate, object obj)
         {
-            Add(new Edge(new Node(subject), new Node(predicate), new Node(obj)));
+            Add(new Edge(Node(subject), Node(predicate), Node(obj)));
         }
 
         public void Add(object subject, string predicate, object obj, bool isOutput)
         {
-            var output = new Node(obj);
+            var output = Node(obj);
             Add(output, isOutput);
-            Add(new Edge(new Node(subject), new Node(predicate), output));
+            Add(new Edge(Node(subject), Node(predicate), output));
         }
 
-        public void Add(Node node, bool isOutput)
+        public void Add(Node node, bool isOutput = false)
         {
-            if (isOutput && !outputs.Contains(node))
+            if (isOutput && !Outputs.Contains(node))
             {
-                outputs.Add(node);
+                Outputs.Add(node);
             }
             if (graph.ContainsVertex(node)) return;
+            if (!NodeIndex.ContainsKey(node.Value))
+            {
+                NodeIndex[node.Value] = node;
+            }
+            else if (NodeIndex[node.Value] != node)
+            {
+                throw new InvalidOperationException($"a node with the value '{node.Value}' already exists!");
+            }
             graph.AddVertex(node);
             node.OnAdd(this);
         }
@@ -50,14 +81,22 @@ namespace graph.network.core
             Add(edge.Subject, false);
             Add(edge.Obj, false);
             graph.AddVerticesAndEdge(edge);
+            Edge backlink = GetBackLink(edge);
+            if (!graph.ContainsEdge(backlink))
+            {
+                graph.AddVerticesAndEdge(backlink);
+            }
+        }
+
+        private static Edge GetBackLink(Edge edge)
+        {
+            return new Edge(edge.Obj, edge.Predicate, edge.Subject);
         }
 
         public void Train(params Example[] examples)
         {
-            var allNodes = new List<Node>(graph.Vertices);
-            allNodes.AddRange(graph.Edges.Select(e => e.Predicate).Distinct());
-            allNodes = allNodes.Distinct().ToList();
-            net = new Net(allNodes, outputs, maxPathLenght, maxNumberOfPaths);
+            List<Node> allNodes = GetNodeIndex();
+            net = new Net(allNodes, Outputs, maxPathLenght, maxNumberOfPaths);
             foreach (Example example in examples)
             {
                 var paths = GetPaths(example);
@@ -67,6 +106,14 @@ namespace graph.network.core
                 }
             }
             net.Train();
+        }
+
+        private List<Node> GetNodeIndex()
+        {
+            var allNodes = new List<Node>(graph.Vertices);
+            allNodes.AddRange(graph.Edges.Select(e => e.Predicate).Distinct());
+            allNodes = allNodes.Distinct().ToList();
+            return allNodes;
         }
 
         private List<NodePath> GetPaths(Node input, Node output)
@@ -85,13 +132,15 @@ namespace graph.network.core
             {
                 inputAdded = true;
                 Add(input, false);
-                output = GetNode(output.Value); //TODO: remove this
             }
             if (!graph.ContainsVertex(output))
             {
                 outputAdded = true;
                 Add(output, true);
             }
+
+            input = GetNode(input.Value); //TODO: remove this
+            output = GetNode(output.Value); //TODO: remove this
 
             //get all the paths from the exposed interface of the input node to 
             //the exposed interface of the output node
@@ -104,6 +153,15 @@ namespace graph.network.core
                 }
             }
 
+            //allow all nodes in the paths to perform any custom processing
+            var all = results.SelectMany(n => n).ToList();
+            all.Add(input);
+            all.Add(output);
+            foreach (var n in all.Distinct())
+            {
+                n.OnProcess(this, results);
+            }
+
             //remove any temp inputs and outputs that were added on the fly
             if (inputAdded)
             {
@@ -112,24 +170,21 @@ namespace graph.network.core
             if (outputAdded)
             {
                 Remove(output);
-                outputs.Remove(output);
             }
 
+    
             return results;
         }
-
-        private void AddPath(Node inputInternceNode, Node outputInterfaceNode, List<NodePath> paths)
+        
+        private void AddPath(Node inputInterfaceNode, Node outputInterfaceNode, List<NodePath> paths)
         {
-            IEnumerable <IEnumerable<Edge>> found = graph.RankedShortestPathHoffmanPavley(n => 1, inputInternceNode, outputInterfaceNode, 10);
+            IEnumerable <IEnumerable<Edge>> found = graph.RankedShortestPathHoffmanPavley(n => 1, inputInterfaceNode, outputInterfaceNode, 10);
             foreach (var path in found)
             {
                 if (path != null)
                 {
                     NodePath nodePath = new NodePath(path);
-                    //if a path travels through another output then it is not valid
-                    var passesThroughAnOutput = nodePath.Skip(1).Take(nodePath.Count - 2).Any(n => outputs.Contains(n));
-                    var passesThroughAnOutputx = nodePath.Take(nodePath.Count - 1).Any(n => outputs.Contains(n));
-                    if (!passesThroughAnOutput && !nodePath.HasLoop) //&& !nodePath.HasLoop
+                    if (inputInterfaceNode.IsPathValid(this, nodePath) && outputInterfaceNode.IsPathValid(this, nodePath))
                     {
                         paths.Add(nodePath);
                         return;
@@ -143,6 +198,11 @@ namespace graph.network.core
         {
             node.OnRemove(this);
             graph.RemoveVertex(node);
+            NodeIndex.Remove(node.Value);
+            if (Outputs.Contains(node))
+            {
+                Outputs.Remove(node);
+            }
         }
 
         public void Remove(Edge edge)
@@ -151,11 +211,16 @@ namespace graph.network.core
             {
                 graph.RemoveEdge(edge);
             }
+            Edge backlink = GetBackLink(edge);
+            if (graph.ContainsEdge(backlink))
+            {
+                graph.RemoveEdge(backlink);
+            }
         }
 
         public Node Predict(string input)
         {
-            return Predict(new Node(input));
+            return Predict(Node(input));
         }
 
         public Node Predict(Node input)
@@ -167,7 +232,7 @@ namespace graph.network.core
         public List<Result> Rank(Node input)
         {
             var results = new List<Result>();
-            outputs.ForEach(ouput => AddResult(input, ouput, results));
+            Outputs.ForEach(ouput => AddResult(input, ouput, results));
             results.Sort((r1, r2) => r2.Probabilty.CompareTo(r1.Probabilty));
             return results;
         }
@@ -175,6 +240,10 @@ namespace graph.network.core
         private void AddResult(Node input, Node ouput, List<Result> results)
         {
             var paths = GetPaths(input, ouput);
+            if (net == null)
+            {
+                net = new Net(GetNodeIndex(), Outputs, maxPathLenght, maxNumberOfPaths);
+            }
             var probabilty = net.GetProbabilty(paths, ouput);
             var result = new Result(input, ouput, paths, probabilty);
             results.Add(result);
@@ -191,6 +260,11 @@ namespace graph.network.core
             Node node = graph.Vertices.First(v => v.Value.Equals(value));
             return IsEdgesEmpty(node);
 
+        }
+
+        public bool ContainsNode(Node node)
+        {
+            return graph.ContainsVertex(node);
         }
 
         public bool IsEdgesEmpty(Node node)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace graph.network.core.nodes
 {
@@ -6,13 +7,19 @@ namespace graph.network.core.nodes
     {
         private readonly Action<Node, GraphNet> onAdd;
         private readonly Action<Node, GraphNet> onRemove;
-        private readonly Action<Node, GraphNet> onTrain;
+        private readonly Action<Node, GraphNet,List<NodePath>> onProcess;
+        private readonly Func<Node, GraphNet,NodePath, bool> isPathValid;
 
-        public DynamicNode(object value, Action<Node, GraphNet> onAdd =null, Action<Node, GraphNet> onRemove = null, Action<Node, GraphNet> onTrain = null) : base(value)
+        public DynamicNode(
+            object value, Action<Node, GraphNet> onAdd =null
+            , Action<Node, GraphNet> onRemove = null
+            , Action<Node, GraphNet, List<NodePath>> onProcess = null
+            ,Func<Node, GraphNet, NodePath, bool> isPathValid = null) : base(value)
         {
             this.onAdd = onAdd;
             this.onRemove = onRemove;
-            this.onTrain = onTrain;
+            this.isPathValid = isPathValid;
+            this.onProcess = onProcess;
         }
 
         public override void OnAdd(GraphNet graph)
@@ -39,15 +46,27 @@ namespace graph.network.core.nodes
             }
         }
 
-        public override void OnTrain(GraphNet graph)
+        public override void OnProcess(GraphNet graph, List<NodePath> paths)
         {
-            if (onTrain == null)
+            if (onProcess == null)
             {
-                base.OnTrain(graph);
+                base.OnProcess(graph, paths);
             }
             else
             {
-                onTrain(this, graph);
+                onProcess(this, graph, paths);
+            }
+        }
+
+        public override bool IsPathValid(GraphNet graph, NodePath path)
+        {
+            if (isPathValid == null)
+            {
+                return base.IsPathValid(graph, path);
+            }
+            else
+            {
+                return isPathValid(this, graph, path);
             }
         }
     }
