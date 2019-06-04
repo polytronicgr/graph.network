@@ -9,12 +9,12 @@ namespace graph.network.core.tests
     [TestFixture]
     public class GraphNetTests
     {
-        //TODO: look at the NewNode thing and try to simplify 
-        //TODO: look at test and see how things can be simplifed
+        //TODO: look at test and see how things can be simplifed with prototypes
         //TODO: review all todos 
         //TODO: add a test of a nested GraphNet
         //TODO: add UI
         //TODO: performace test
+        //TODO: paris is the capital of france
 
         [Test]
         public void SuperHeros()
@@ -45,17 +45,16 @@ namespace graph.network.core.tests
             gn.Add("london", "is_a", "city");
             gn.Add("london", "capital_of", "uk");
             gn.Add("paris", "is_a", "city");
+            gn.Add("york", "is_a", "city");
             gn.Add("paris", "capital_of", "france");
             gn.Add("uk", "is_a", "country");
-            gn.Add("britain", "same_as", "uk");
-            gn.Add("lon", "same_as", "london");
             gn.Add("france", "is_a", "country");
             //it also has a couple of output nodes for answering yes/no questions
             gn.Add(gn.Node(true), true);
             gn.Add(gn.Node(false), true);
 
-            //NLP tokeniser that creates an node for each word in a string and 
-            //then also adds these words to the true and false output nodes so that we can
+            //NLP tokeniser that creates an node for each word and 
+            //also adds these words to the true and false output nodes so that we can
             //map the paths between words: (london >> is_a >> city >> true)
             Action<Node, GraphNet> tokeniser = (node, graph) =>
             {
@@ -66,15 +65,16 @@ namespace graph.network.core.tests
                 gn.Node(false, "word", words);
             };
 
-            //train some examples of true and falase statments 
+            //train some examples of true and false statments 
             gn.Train(
                  new Example(new DynamicNode("london is a city", tokeniser), gn.Node(true))
                 , new Example(new DynamicNode("london is the caplital of uk", tokeniser), gn.Node(true))
+                , new Example(new DynamicNode("london is the caplital of france", tokeniser), gn.Node(false))
                 , new Example(new DynamicNode("london is a country", tokeniser), gn.Node(false))
                 , new Example(new DynamicNode("uk is a country", tokeniser), gn.Node(true))
-                , new Example(new DynamicNode("britain is a country", tokeniser), gn.Node(true))
-                , new Example(new DynamicNode("britain is a city", tokeniser), gn.Node(false))
                 , new Example(new DynamicNode("uk is a city", tokeniser), gn.Node(false))
+                , new Example(new DynamicNode("york is a city", tokeniser), gn.Node(true))
+                , new Example(new DynamicNode("ding-dong is a city", tokeniser), gn.Node(false))
             );
 
             //now we can ask questions about entities that are in the knowlage graph but the training has not seen
@@ -82,8 +82,8 @@ namespace graph.network.core.tests
             Assert.AreEqual("False", gn.Predict(new DynamicNode("paris is a country", tokeniser)).ToString());
             Assert.AreEqual("True", gn.Predict(new DynamicNode("is france a country ?", tokeniser)).ToString());
             Assert.AreEqual("False", gn.Predict(new DynamicNode("france is a city", tokeniser)).ToString());
-            Assert.AreEqual("True", gn.Predict(new DynamicNode("lon is a city", tokeniser)).ToString());
-            //TOOD: this example may require path convolution and a deeper net (lon is london + london not a country) Assert.AreEqual("False", gn.Predict(new DynamicNode("lon is a country", tokeniser, onRemove)).ToString());
+            //TODO: Assert.AreEqual("True", gn.Predict(new DynamicNode("paris is the capital of france", tokeniser)).ToString());
+            //TODO:Assert.AreEqual("False", gn.Predict(new DynamicNode("paris is the capital of the uk", tokeniser)).ToString());
         }
 
         [Test]
