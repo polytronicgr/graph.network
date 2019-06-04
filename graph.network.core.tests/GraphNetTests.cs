@@ -20,7 +20,7 @@ namespace graph.network.core.tests
         [Test]
         public void SuperHeros()
         {
-            var gn = new GraphNet();
+            var gn = new GraphNet(maxPathLenght:10, maxNumberOfPaths: 5);
             gn.Add("spider_man", "is_a", "super_hero");
             gn.Add("hulk", "is_a", "super_hero");
             gn.Add("green_goblin", "is_a", "super_villain");
@@ -42,7 +42,7 @@ namespace graph.network.core.tests
         public void BasicExample()
         {
             //set up a simple graph
-            var gn = new GraphNet();
+            var gn = new GraphNet(maxPathLenght: 10, maxNumberOfPaths: 5);
             gn.Add("a", "to", "z");
             gn.Add("b", "to", "z");
             gn.Add("c", "to", "z");
@@ -74,7 +74,7 @@ namespace graph.network.core.tests
         public void MultiPathExample()
         {
             //set up a simple graph
-            var gn = new GraphNet();
+            var gn = new GraphNet(maxPathLenght: 10, maxNumberOfPaths: 5);
             gn.Add("a", "to", "z");
             gn.Add("b", "to", "z");
             gn.Add("c", "to", "z");
@@ -101,7 +101,7 @@ namespace graph.network.core.tests
         public void SimpleQuestionAndAnswer()
         {
             //cerate a small knowlage graph with information about areas
-            var gn = new GraphNet(maxNumberOfPaths: 100);
+            var gn = new GraphNet(maxNumberOfPaths: 10);
             gn.Add("london", "is_a", "city");
             gn.Add("london", "capital_of", "uk");
             gn.Add("paris", "is_a", "city");
@@ -164,7 +164,7 @@ namespace graph.network.core.tests
         public void Calculator()
         {
             //small graph of operators
-            var gn = new GraphNet(maxNumberOfPaths: 100);
+            var gn = new GraphNet(maxNumberOfPaths: 10);
             gn.Add(gn.Node("number"));
             gn.Add("+", "a", "operand");
             gn.Add("-", "a", "operand");
