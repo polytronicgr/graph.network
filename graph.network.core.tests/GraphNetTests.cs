@@ -157,24 +157,22 @@ namespace graph.network.core.tests
 
             //to run the calculations we will need:
 
-            //(1) a NLP the input will add nodes for words add mark any of those words that are numbers 
+            //(1) a NLP the input
             Action<Node, GraphNet> tokeniser = (node, graph) =>
             {
-                node.Edges.Clear(); //TODO: why do i need to clear??
-                string[] words = node.Value.ToString().Split(' ');
-                var edges = new List<Edge>();
-                foreach (var word in words)
+                //add nodes for words
+                var words = node.Value.ToString().Split(' ');
+                gn.Node(node, "word", words);
+                
+                //mark any of those words that are numbers
+                var numbers = node.Edges
+                    .Where(e => e.Obj.Value.ToString().All(char.IsDigit))
+                    .Select(e=> e.Obj);
+                foreach (var word in numbers)
                 {
-                    Node wordNode = gn.Node(word.Trim());
-                    var edge = new Edge(node, gn.Node("word"), wordNode);
-                    if (word.All(char.IsDigit))
-                    {
-                        edge.Internal = true;
-                        var linkNumber = new Edge(wordNode, gn.Node("a"), gn.Node("number"));
-                        wordNode.AddEdge(linkNumber);
-                    }
-                    node.Edges.Add(edge);
+                    word.AddEdge(gn.Node("a"), gn.Node("number"));
                 }
+
                 Node.BaseOnAdd(node, graph);
             };
 
