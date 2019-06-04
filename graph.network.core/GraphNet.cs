@@ -24,11 +24,17 @@ namespace graph.network.core
             this.maxNumberOfPaths = maxNumberOfPaths;
         }
 
-        public Node Node(string subject, string predicate, params string[] objs)
+        public Node Node(Node subject, string predicate, params string[] objs)
+        {
+            return Node(subject.Value, predicate, objs);
+        }
+
+        public Node Node(object subject, string predicate, params string[] objs)
         {
             if (NodeIndex.ContainsKey(subject))
             {
                 Node node = NodeIndex[subject];
+                node.Edges.Clear();
                 foreach (var obj in objs)
                 {
                     node.AddEdge(Node(predicate), Node(obj));
@@ -115,6 +121,7 @@ namespace graph.network.core
         public void Train(params Example[] examples)
         {
             List<Node> allNodes = GetNodeIndex();
+
             net = new Net(allNodes, Outputs, maxPathLenght, maxNumberOfPaths);
             foreach (Example example in examples)
             {
@@ -158,8 +165,8 @@ namespace graph.network.core
                 Add(output, true);
             }
 
-            input = GetNode(input.Value); //TODO: remove this
-            output = GetNode(output.Value); //TODO: remove this
+            input = Node(input.Value); //TODO: remove this
+            output = Node(output.Value); //TODO: remove this
 
             //get all the paths from the exposed interface of the input node to 
             //the exposed interface of the output node
@@ -197,6 +204,11 @@ namespace graph.network.core
         
         private void AddPath(Node inputInterfaceNode, Node outputInterfaceNode, Node masterInputNode, List<NodePath> paths)
         {
+            //TOD: think about this - it can happen if you have an orphend edge 
+            if (!NodeIndex.ContainsKey(inputInterfaceNode.Value)) return;
+            if (!NodeIndex.ContainsKey(outputInterfaceNode.Value)) return;
+            inputInterfaceNode = NodeIndex[inputInterfaceNode.Value];
+            outputInterfaceNode = NodeIndex[outputInterfaceNode.Value];
             IEnumerable <IEnumerable<Edge>> found = graph.RankedShortestPathHoffmanPavley(n => 1, inputInterfaceNode, outputInterfaceNode, 10);
             foreach (var path in found)
             {

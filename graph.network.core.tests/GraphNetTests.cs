@@ -30,6 +30,7 @@ namespace graph.network.core.tests
             gn.Add("hero", "is_not", "bad", true);
             gn.Add("villain", "is", "bad", true);
             gn.Add("villain", "is_not", "good", true);
+
             gn.Train(gn.NewExample("spider_man", "good"), gn.NewExample("green_goblin", "bad"));
 
             Assert.AreEqual("good", gn.Predict("hulk").ToString());
@@ -111,30 +112,16 @@ namespace graph.network.core.tests
             gn.Add(gn.Node(true), true);
             gn.Add(gn.Node(false), true);
 
-            //nodes can be complex and add and remove other nodes and edges from the graph
-            //this is a NLP tokeniser that creates an node for each word in a string and 
+            //NLP tokeniser that creates an node for each word in a string and 
             //then also adds these words to the true and false output nodes so that we can
-            //map the paths between words and thus say if a statement is true or false based
-            //on the knowlage contained in the graph
+            //map the paths between words: (london >> is_a >> city >> true)
             Action<Node, GraphNet> tokeniser = (node, graph) =>
             {
-                //create an edge for every word
-                List<Edge> words = node.Value.ToString().Split(' ')
-                .Select(
-                    s => new Edge(node, gn.Node("word"), gn.Node(s)))
-                .ToList();
-                //set these to be the edges of this node
-                node.Edges = words;
+                var words = node.Value.ToString().Split(' ');
+                gn.Node(node, "word", words);
                 Node.BaseOnAdd(node, graph);
-
-                //we also need a way to link words to the true false outputs
-                var trueNode = graph.GetNode(true);
-                trueNode.Edges = words.Select(e => new Edge(trueNode, e.Predicate, e.Obj)).ToList();
-                Node.BaseOnAdd(trueNode, graph);
-
-                var falseNode = graph.GetNode(false);
-                falseNode.Edges = words.Select(e => new Edge(falseNode, e.Predicate, e.Obj)).ToList();
-                Node.BaseOnAdd(falseNode, graph);
+                gn.Node(true, "word", words);
+                gn.Node(false, "word", words);
             };
 
             //train some examples of true and falase statments 
