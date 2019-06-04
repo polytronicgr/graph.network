@@ -8,24 +8,11 @@ namespace graph.network.core.nodes
     {
         Dictionary<string, object> properties = new Dictionary<string, object>();
  
-        protected Node(object value)
+        public Node(object value)
         {
             Value = value;
         }
 
-        public static Node NewNode(string subject, string predicate, string obj, Dictionary<object, Node> nodeIndex) 
-        {
-            var node = NewNode(subject, nodeIndex);
-            node.AddEdge(predicate, obj, nodeIndex);
-            return node;
-        }
-        public static Node NewNode(object value, Dictionary<object,Node> nodeIndex)
-        {
-            if (nodeIndex.ContainsKey(value)) return nodeIndex[value];
-            var node = new Node(value);
-            nodeIndex[value] = node;
-            return node;
-        }
 
         public object Value { get; }
 
@@ -105,14 +92,14 @@ namespace graph.network.core.nodes
             return Edges.Count > 0 ? Edges.Select(e => e.Obj) : new List<Node> { this };
         }
 
-        public Node AddEdge(string predicate, object obj, Dictionary<object, Node> nodeIndex)
+        public Node AddEdge(string predicate, object obj, GraphNet gn)
         {
-            return AddEdge(predicate, NewNode(obj, nodeIndex), nodeIndex);
+            return AddEdge(predicate, gn.Node(obj), gn);
         }
 
-        public Node AddEdge(string predicate, Node obj, Dictionary<object, Node> nodeIndex)
+        public Node AddEdge(string predicate, Node obj, GraphNet gn)
         {
-            return AddEdge(NewNode(predicate, nodeIndex), obj);
+            return AddEdge(gn.Node(predicate), obj);
         }
 
         public Node AddEdge(Node predicate, Node obj)

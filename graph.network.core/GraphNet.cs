@@ -23,24 +23,45 @@ namespace graph.network.core
             this.maxPathLenght = maxPathLenght;
             this.maxNumberOfPaths = maxNumberOfPaths;
         }
-        
-        public Node NewNode(string subject, string predicate, string obj)
+
+        public Node Node(string subject, string predicate, params string[] objs)
         {
-            return nodes.Node.NewNode(subject, predicate, obj, NodeIndex);
+            if (NodeIndex.ContainsKey(subject))
+            {
+                Node node = NodeIndex[subject];
+                foreach (var obj in objs)
+                {
+                    node.AddEdge(Node(predicate), Node(obj));
+                }
+                return node;
+            }
+            else
+            {
+                var node = new Node(subject);
+                foreach (var obj in objs)
+                {
+                    node.AddEdge(Node(predicate), Node(obj));
+                }
+                NodeIndex[node.Value] = node;
+                return node;
+            }
         }
         public Node Node(object value)
         {
-            return nodes.Node.NewNode(value, NodeIndex);
+            if(NodeIndex.ContainsKey(value))  return NodeIndex[value];
+            var node = new Node(value);
+            NodeIndex[node.Value] = node;
+            return node;
         }
 
         public Example NewExample(string input, string output)
         {
-            return new Example(nodes.Node.NewNode(input, NodeIndex), nodes.Node.NewNode(output, NodeIndex) );
+            return new Example(Node(input), Node(output) );
         }
 
         public Example NewExample(Node input, string output) 
         {
-            return new Example(input, nodes.Node.NewNode(output, NodeIndex));
+            return new Example(input, Node(output));
         }
 
         public void Add(object subject, string predicate, object obj)

@@ -49,22 +49,22 @@ namespace graph.network.core.tests
             gn.Add("z", "to", "out_c", true);
 
             //create some inputs
-            var a = gn.NewNode("in_a", "to", "a");
-            var b = gn.NewNode("in_b", "to", "b");
-            var c = gn.NewNode("in_c", "to", "c");
+            var a = gn.Node("in_a", "to", "a");
+            var b = gn.Node("in_b", "to", "b");
+            var c = gn.Node("in_c", "to", "c");
 
             //train the net with examples of these inputs to outputs
             gn.Train(gn.NewExample(a, "out_a"), gn.NewExample(b, "out_b"), gn.NewExample(c, "out_c"));
 
             //create a new input that it has not see but connects to the 'a' node in the graph
-            var x = gn.NewNode("in_x", "to", "a");
+            var x = gn.Node("in_x", "to", "a");
             //the prediction should be that the output is out_a
             Assert.AreEqual("out_a", gn.Predict(x).ToString());
             //same for 'b'
-            var y = gn.NewNode("in_y", "to", "b");
+            var y = gn.Node("in_y", "to", "b");
             Assert.AreEqual("out_b", gn.Predict(y).ToString());
             //same for 'b'
-            var z = gn.NewNode("in_z", "to", "c");
+            var z = gn.Node("in_z", "to", "c");
             Assert.AreEqual("out_c", gn.Predict(z).ToString());
         }
 
@@ -82,17 +82,16 @@ namespace graph.network.core.tests
             gn.Add("z", "to", "out_c", true);
 
             //create some inputs
-            var a = gn.NewNode("in_a", "to", "a");
-            var b = gn.NewNode("in_b", "to", "b");
-            a.AddEdge("to", "x", gn.NodeIndex);
-            var c = gn.NewNode("in_c", "to", "c");
+            var a = gn.Node("in_a", "to", "a");
+            var b = gn.Node("in_b", "to", "b");
+            var c = gn.Node("in_c", "to", "c");
 
             //train the net with examples of these inputs to outputs
             gn.Train(gn.NewExample(a, "out_a"), gn.NewExample(b, "out_b"), gn.NewExample(c, "out_c"));
 
-            Assert.AreEqual("out_b", gn.Predict(gn.NewNode("test", "to", "x")).ToString());
-            Assert.AreEqual("out_b", gn.Predict(gn.NewNode("test", "to", "b")).ToString());
-            Assert.AreEqual("out_c", gn.Predict(gn.NewNode("test", "to", "c")).ToString());
+            Assert.AreEqual("out_b", gn.Predict(gn.Node("test", "to", "x")).ToString());
+            Assert.AreEqual("out_b", gn.Predict(gn.Node("test", "to", "b")).ToString());
+            Assert.AreEqual("out_c", gn.Predict(gn.Node("test", "to", "c")).ToString());
         }
 
         [Test]
@@ -237,15 +236,15 @@ namespace graph.network.core.tests
 
             //add these complex ouput nodes
             var add = new DynamicNode("add", onProcess: calculate);
-            add.AddEdge("param1", new DynamicNode("add_x", isPathValid: isNumber, onProcess: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
-            add.AddEdge("param2", new DynamicNode("add_y", isPathValid: isNumber, onProcess: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
-            add.AddEdge("opp", "+", gn.NodeIndex);
+            add.AddEdge("param1", new DynamicNode("add_x", isPathValid: isNumber, onProcess: extractNumber), gn).AddEdge("must_be", "number", gn);
+            add.AddEdge("param2", new DynamicNode("add_y", isPathValid: isNumber, onProcess: extractNumber), gn).AddEdge("must_be", "number", gn);
+            add.AddEdge("opp", "+", gn);
             gn.Add(add, true);
 
             var minus = new DynamicNode("minus", onProcess: calculate);
-            minus.AddEdge("param1", new DynamicNode("minus_x", isPathValid: isNumber, onProcess: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
-            minus.AddEdge("param2", new DynamicNode("minus_y", isPathValid: isNumber, onProcess: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
-            minus.AddEdge("opp", "-", gn.NodeIndex);
+            minus.AddEdge("param1", new DynamicNode("minus_x", isPathValid: isNumber, onProcess: extractNumber), gn).AddEdge("must_be", "number", gn);
+            minus.AddEdge("param2", new DynamicNode("minus_y", isPathValid: isNumber, onProcess: extractNumber), gn).AddEdge("must_be", "number", gn);
+            minus.AddEdge("opp", "-", gn);
             gn.Add(minus, true);
 
             //teach it the basic maths funcitons
