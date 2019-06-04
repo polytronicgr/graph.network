@@ -217,12 +217,13 @@ namespace graph.network.core.tests
                 }
             };
 
-            //(3) some special nodes for the params that are only valid if they start with numbers and can pull those numbers
+            //(3) some special nodes for the params that are only valid if they start with numbers ...
             Func<Node, GraphNet, NodePath, bool> isNumber = (node, graph, path) =>
             {
                 return Node.BaseIsPathValid(node, graph, path) && path[0].Value.ToString().All(char.IsDigit);
             };
 
+            //... and they can pull those numbers out and store them in the nodes retult
             Action<Node, GraphNet, List<NodePath>> extractNumber = (node, graph, paths) =>
             {
                 //TODO: should the paths just be the ones to this node???
