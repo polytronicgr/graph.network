@@ -14,16 +14,14 @@ namespace graph.network.core
         private Net net;
         private readonly int maxPathLenght;
         private readonly int maxNumberOfPaths;
-        private Dictionary<object, Node> nodeIndex = new Dictionary<object, Node>();
 
         public List<Node> Outputs { get; set; } = new List<Node>();
-        public Dictionary<object, Node> NodeIndex { get => nodeIndex; set => nodeIndex = value; }
+        public Dictionary<object, Node> NodeIndex { get; set; } = new Dictionary<object, Node>();
 
         public GraphNet(int maxPathLenght = 20, int maxNumberOfPaths = 10)
         {
             this.maxPathLenght = maxPathLenght;
             this.maxNumberOfPaths = maxNumberOfPaths;
-            
         }
         
         public Node NewNode(string subject, string predicate, string obj)
