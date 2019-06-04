@@ -9,13 +9,12 @@ namespace graph.network.core.tests
     [TestFixture]
     public class GraphNetTests
     {
-        //TODO: review all changes, run tests again and then checkin
-        //TODO: review all todos 
         //TODO: look at the NewNode thing and try to simplify 
         //TODO: look at test and see how things can be simplifed
+        //TODO: review all todos 
+        //TODO: add a test of a nested GraphNet
         //TODO: add UI
         //TODO: performace test
-        //TODO: add a test of a nested GraphNet
 
         [Test]
         public void SuperHeros()
@@ -31,7 +30,6 @@ namespace graph.network.core.tests
             gn.Add("hero", "is_not", "bad", true);
             gn.Add("villain", "is", "bad", true);
             gn.Add("villain", "is_not", "good", true);
-
             gn.Train(gn.NewExample("spider_man", "good"), gn.NewExample("green_goblin", "bad"));
 
             Assert.AreEqual("good", gn.Predict("hulk").ToString());
@@ -223,13 +221,14 @@ namespace graph.network.core.tests
                 return Node.BaseIsPathValid(node, graph, path) && path[0].Value.ToString().All(char.IsDigit);
             };
 
-            //... and they can pull those numbers out and store them in the nodes retult
+            //... and they can pull those numbers out and store them in the nodes result
             Action<Node, GraphNet, List<NodePath>> extractNumber = (node, graph, paths) =>
             {
-                //TODO: should the paths just be the ones to this node???
+                //get any paths that end in this node whose input has not been used by another node
                 var firstPathToThisNode = paths.Where(p=> p[p.Count-1]==node && !p[0].GetProp<bool>("used")).FirstOrDefault(); 
                 if (firstPathToThisNode != null)
                 {
+                    //take the unput number and mark it as used
                     var start = firstPathToThisNode[0];
                     node.Result = decimal.Parse(start.Value.ToString());
                     start.SetProp("used", true);
@@ -258,6 +257,7 @@ namespace graph.network.core.tests
             //test
             Assert.AreEqual(15, gn.Predict(new DynamicNode("5 + 10", tokeniser)).Result);
             Assert.AreEqual(2, gn.Predict(new DynamicNode("5 - 3", tokeniser)).Result);
+            Assert.AreEqual(4, gn.Predict(new DynamicNode("5 - 1", tokeniser)).Result);
         }
     }
  }

@@ -73,7 +73,6 @@ namespace graph.network.core.nodes
                     graph.Remove(n);
                 }
             });
-
         }
         public virtual bool IsPathValid(GraphNet graph, NodePath path)
         {
