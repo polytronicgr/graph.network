@@ -42,7 +42,7 @@ namespace graph.network.core.tests
         [Test]
         public void SimpleQuestionAndAnswer()
         {
-            //cerate a small knowlage graph with information about areas and a couple of true/false output nodes
+            //create a small knowlage graph with information about areas and a couple of true/false output nodes
             var gn = new GraphNet(maxNumberOfPaths: 10);
             gn.Add("london", "is_a", "city");
             gn.Add("london", "capital_of", "uk");
