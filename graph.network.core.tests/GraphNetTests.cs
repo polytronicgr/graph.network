@@ -73,8 +73,6 @@ namespace graph.network.core.tests
                 , new Example(new DynamicNode("london is a country", tokeniser), gn.Node(false))
                 , new Example(new DynamicNode("uk is a country", tokeniser), gn.Node(true))
                 , new Example(new DynamicNode("uk is a city", tokeniser), gn.Node(false))
-                , new Example(new DynamicNode("york is a city", tokeniser), gn.Node(true))
-                , new Example(new DynamicNode("ding-dong is a city", tokeniser), gn.Node(false))
             );
 
             //now we can ask questions about entities that are in the knowlage graph but the training has not seen
@@ -82,6 +80,8 @@ namespace graph.network.core.tests
             Assert.AreEqual("False", gn.Predict(new DynamicNode("paris is a country", tokeniser)).ToString());
             Assert.AreEqual("True", gn.Predict(new DynamicNode("is france a country ?", tokeniser)).ToString());
             Assert.AreEqual("False", gn.Predict(new DynamicNode("france is a city", tokeniser)).ToString());
+            Assert.AreEqual("True", gn.Predict(new DynamicNode("york is a city", tokeniser)).ToString());
+            Assert.AreEqual("False", gn.Predict(new DynamicNode("ding-dong is a city", tokeniser)).ToString());
             //TODO: Assert.AreEqual("True", gn.Predict(new DynamicNode("paris is the capital of france", tokeniser)).ToString());
             //TODO:Assert.AreEqual("False", gn.Predict(new DynamicNode("paris is the capital of the uk", tokeniser)).ToString());
         }
