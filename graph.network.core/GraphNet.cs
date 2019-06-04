@@ -165,9 +165,6 @@ namespace graph.network.core
                 Add(output, true);
             }
 
-            input = Node(input.Value); //TODO: remove this
-            output = Node(output.Value); //TODO: remove this
-
             //get all the paths from the exposed interface of the input node to 
             //the exposed interface of the output node
             List<NodePath> results = new List<NodePath>();
