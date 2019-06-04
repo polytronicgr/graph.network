@@ -65,9 +65,12 @@ namespace graph.network.core.tests
                 gn.Node(false, "word", words);
             };
 
+            //gn.RegisterDynamic("ask", tokeniser);
+            //could make gn a dynamic: gn.ask("london is a city")
+
             //train some examples of true and false statments 
             gn.Train(
-                 new Example(new DynamicNode("london is a city", tokeniser), gn.Node(true))
+                  new Example(new DynamicNode("london is a city", tokeniser), gn.Node(true))
                 , new Example(new DynamicNode("london is the caplital of uk", tokeniser), gn.Node(true))
                 , new Example(new DynamicNode("london is the caplital of france", tokeniser), gn.Node(false))
                 , new Example(new DynamicNode("london is a country", tokeniser), gn.Node(false))
@@ -99,7 +102,7 @@ namespace graph.network.core.tests
 
             //to run the calculations we will need:
 
-            //(1) a NLP the input
+            //(1) a NLP the input with numbers marked
             Action<Node, GraphNet> tokeniser = (node, graph) =>
             {
                 //add nodes for words
@@ -174,7 +177,7 @@ namespace graph.network.core.tests
             minus.AddEdge("opp", "-", gn);
             gn.Add(minus, true);
 
-            //teach it the basic maths funcitons
+            //teach it the basic math funcitons
             gn.Train(
                     new Example(new DynamicNode("1 + 2", tokeniser), add),
                     new Example(new DynamicNode("1 - 2", tokeniser), minus)
@@ -183,7 +186,7 @@ namespace graph.network.core.tests
             //test
             Assert.AreEqual(15, gn.Predict(new DynamicNode("5 + 10", tokeniser)).Result);
             Assert.AreEqual(2, gn.Predict(new DynamicNode("5 - 3", tokeniser)).Result);
-            Assert.AreEqual(4, gn.Predict(new DynamicNode("5 - 1", tokeniser)).Result);
+            Assert.AreEqual(4, gn.Predict(new DynamicNode("what is 5 - 1", tokeniser)).Result);
         }
 
         [Test]
