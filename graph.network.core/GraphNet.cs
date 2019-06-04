@@ -246,12 +246,20 @@ namespace graph.network.core
             }
         }
 
-        public Node Predict(string input)
+
+        public object Predict(string input)
         {
             return Predict(Node(input));
         }
 
-        public Node Predict(Node input)
+        public object Predict(Node input)
+        {
+            List<Result> results = Rank(input);
+            return results[0].Output.Result;
+        }
+
+
+        public Node PredictNode(Node input)
         {
             List<Result> results = Rank(input);
             return results[0].Output;

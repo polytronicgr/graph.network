@@ -35,8 +35,8 @@ namespace graph.network.core.tests
 
             gn.Train(gn.NewExample("spider_man", "good"), gn.NewExample("green_goblin", "bad"));
 
-            Assert.AreEqual("good", gn.Predict("hulk").ToString());
-            Assert.AreEqual("bad", gn.Predict("red_king").ToString());
+            Assert.AreEqual("good", gn.Predict("hulk"));
+            Assert.AreEqual("bad", gn.Predict("red_king"));
         }
 
         [Test]
@@ -80,12 +80,12 @@ namespace graph.network.core.tests
             );
 
             //now we can ask questions about entities that are in the knowlage graph but the training has not seen
-            Assert.AreEqual(true, gn.Predict(new DynamicNode("paris is a city", tokeniser)).Result);
-            Assert.AreEqual(false, gn.Predict(new DynamicNode("paris is a country", tokeniser)).Result);
-            Assert.AreEqual(true, gn.Predict(new DynamicNode("is france a country ?", tokeniser)).Result);
-            Assert.AreEqual(false, gn.Predict(new DynamicNode("france is a city", tokeniser)).Result);
-            Assert.AreEqual(true, gn.Predict(new DynamicNode("york is a city", tokeniser)).Result);
-            Assert.AreEqual(false, gn.Predict(new DynamicNode("ding-dong is a city", tokeniser)).Result);
+            Assert.AreEqual(true, gn.Predict(new DynamicNode("paris is a city", tokeniser)));
+            Assert.AreEqual(false, gn.Predict(new DynamicNode("paris is a country", tokeniser)));
+            Assert.AreEqual(true, gn.Predict(new DynamicNode("is france a country ?", tokeniser)));
+            Assert.AreEqual(false, gn.Predict(new DynamicNode("france is a city", tokeniser)));
+            Assert.AreEqual(true, gn.Predict(new DynamicNode("york is a city", tokeniser)));
+            Assert.AreEqual(false, gn.Predict(new DynamicNode("ding-dong is a city", tokeniser)));
             //TODO: Assert.AreEqual("True", gn.Predict(new DynamicNode("paris is the capital of france", tokeniser)).Result());
             //TODO:Assert.AreEqual("False", gn.Predict(new DynamicNode("paris is the capital of the uk", tokeniser)).Result());
         }
@@ -197,10 +197,10 @@ namespace graph.network.core.tests
             );
 
             //test
-            Assert.AreEqual(15, gn.Predict(new DynamicNode("5 + 10", tokeniser)).Result);
-            Assert.AreEqual(2, gn.Predict(new DynamicNode("5 - 3", tokeniser)).Result);
-            Assert.AreEqual(4, gn.Predict(new DynamicNode("what is 5 - 1", tokeniser)).Result);
-            Assert.AreEqual(21, gn.Predict(new DynamicNode("3 * 7", tokeniser)).Result);
+            Assert.AreEqual(15, gn.Predict(new DynamicNode("5 + 10", tokeniser)));
+            Assert.AreEqual(2, gn.Predict(new DynamicNode("5 - 3", tokeniser)));
+            Assert.AreEqual(4, gn.Predict(new DynamicNode("what is 5 - 1", tokeniser)));
+            Assert.AreEqual(21, gn.Predict(new DynamicNode("3 * 7", tokeniser)));
             //Assert.AreEqual(15, gn.Predict(new DynamicNode("3 x 5", tokeniser)).Result);
         }
 
@@ -227,13 +227,13 @@ namespace graph.network.core.tests
             //create a new input that it has not see but connects to the 'a' node in the graph
             var x = gn.Node("in_x", "to", "a");
             //the prediction should be that the output is out_a
-            Assert.AreEqual("out_a", gn.Predict(x).ToString());
+            Assert.AreEqual("out_a", gn.Predict(x));
             //same for 'b'
             var y = gn.Node("in_y", "to", "b");
-            Assert.AreEqual("out_b", gn.Predict(y).ToString());
+            Assert.AreEqual("out_b", gn.Predict(y));
             //same for 'b'
             var z = gn.Node("in_z", "to", "c");
-            Assert.AreEqual("out_c", gn.Predict(z).ToString());
+            Assert.AreEqual("out_c", gn.Predict(z));
         }
 
         [Test]
@@ -257,9 +257,9 @@ namespace graph.network.core.tests
             //train the net with examples of these inputs to outputs
             gn.Train(gn.NewExample(a, "out_a"), gn.NewExample(b, "out_b"), gn.NewExample(c, "out_c"));
 
-            Assert.AreEqual("out_b", gn.Predict(gn.Node("test", "to", "x")).ToString());
-            Assert.AreEqual("out_b", gn.Predict(gn.Node("test", "to", "b")).ToString());
-            Assert.AreEqual("out_c", gn.Predict(gn.Node("test", "to", "c")).ToString());
+            Assert.AreEqual("out_b", gn.Predict(gn.Node("test", "to", "x")));
+            Assert.AreEqual("out_b", gn.Predict(gn.Node("test", "to", "b")));
+            Assert.AreEqual("out_c", gn.Predict(gn.Node("test", "to", "c")));
         }
     }
  }
