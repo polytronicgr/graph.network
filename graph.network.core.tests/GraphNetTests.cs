@@ -38,64 +38,6 @@ namespace graph.network.core.tests
         }
 
         [Test]
-        public void BasicExample()
-        {
-            //set up a simple graph
-            var gn = new GraphNet(maxPathLenght: 10, maxNumberOfPaths: 5);
-            gn.Add("a", "to", "z");
-            gn.Add("b", "to", "z");
-            gn.Add("c", "to", "z");
-            gn.Add("z", "to", "out_a", true);
-            gn.Add("z", "to", "out_b", true);
-            gn.Add("z", "to", "out_c", true);
-
-            //create some inputs
-            var a = gn.Node("in_a", "to", "a");
-            var b = gn.Node("in_b", "to", "b");
-            var c = gn.Node("in_c", "to", "c");
-
-            //train the net with examples of these inputs to outputs
-            gn.Train(gn.NewExample(a, "out_a"), gn.NewExample(b, "out_b"), gn.NewExample(c, "out_c"));
-
-            //create a new input that it has not see but connects to the 'a' node in the graph
-            var x = gn.Node("in_x", "to", "a");
-            //the prediction should be that the output is out_a
-            Assert.AreEqual("out_a", gn.Predict(x).ToString());
-            //same for 'b'
-            var y = gn.Node("in_y", "to", "b");
-            Assert.AreEqual("out_b", gn.Predict(y).ToString());
-            //same for 'b'
-            var z = gn.Node("in_z", "to", "c");
-            Assert.AreEqual("out_c", gn.Predict(z).ToString());
-        }
-
-        [Test]
-        public void MultiPathExample()
-        {
-            //set up a simple graph
-            var gn = new GraphNet(maxPathLenght: 10, maxNumberOfPaths: 5);
-            gn.Add("a", "to", "z");
-            gn.Add("b", "to", "z");
-            gn.Add("c", "to", "z");
-            gn.Add("z", "to", "out_a", true);
-            gn.Add("x", "to", "out_b", true);
-            gn.Add("z", "to", "out_b", true);
-            gn.Add("z", "to", "out_c", true);
-
-            //create some inputs
-            var a = gn.Node("in_a", "to", "a");
-            var b = gn.Node("in_b", "to", "b");
-            var c = gn.Node("in_c", "to", "c");
-
-            //train the net with examples of these inputs to outputs
-            gn.Train(gn.NewExample(a, "out_a"), gn.NewExample(b, "out_b"), gn.NewExample(c, "out_c"));
-
-            Assert.AreEqual("out_b", gn.Predict(gn.Node("test", "to", "x")).ToString());
-            Assert.AreEqual("out_b", gn.Predict(gn.Node("test", "to", "b")).ToString());
-            Assert.AreEqual("out_c", gn.Predict(gn.Node("test", "to", "c")).ToString());
-        }
-
-        [Test]
         public void SimpleQuestionAndAnswer()
         {
             //cerate a small knowlage graph with information about areas
@@ -242,6 +184,64 @@ namespace graph.network.core.tests
             Assert.AreEqual(15, gn.Predict(new DynamicNode("5 + 10", tokeniser)).Result);
             Assert.AreEqual(2, gn.Predict(new DynamicNode("5 - 3", tokeniser)).Result);
             Assert.AreEqual(4, gn.Predict(new DynamicNode("5 - 1", tokeniser)).Result);
+        }
+
+        [Test]
+        public void BasicExample()
+        {
+            //set up a simple graph
+            var gn = new GraphNet(maxPathLenght: 10, maxNumberOfPaths: 5);
+            gn.Add("a", "to", "z");
+            gn.Add("b", "to", "z");
+            gn.Add("c", "to", "z");
+            gn.Add("z", "to", "out_a", true);
+            gn.Add("z", "to", "out_b", true);
+            gn.Add("z", "to", "out_c", true);
+
+            //create some inputs
+            var a = gn.Node("in_a", "to", "a");
+            var b = gn.Node("in_b", "to", "b");
+            var c = gn.Node("in_c", "to", "c");
+
+            //train the net with examples of these inputs to outputs
+            gn.Train(gn.NewExample(a, "out_a"), gn.NewExample(b, "out_b"), gn.NewExample(c, "out_c"));
+
+            //create a new input that it has not see but connects to the 'a' node in the graph
+            var x = gn.Node("in_x", "to", "a");
+            //the prediction should be that the output is out_a
+            Assert.AreEqual("out_a", gn.Predict(x).ToString());
+            //same for 'b'
+            var y = gn.Node("in_y", "to", "b");
+            Assert.AreEqual("out_b", gn.Predict(y).ToString());
+            //same for 'b'
+            var z = gn.Node("in_z", "to", "c");
+            Assert.AreEqual("out_c", gn.Predict(z).ToString());
+        }
+
+        [Test]
+        public void MultiPathExample()
+        {
+            //set up a simple graph
+            var gn = new GraphNet(maxPathLenght: 10, maxNumberOfPaths: 5);
+            gn.Add("a", "to", "z");
+            gn.Add("b", "to", "z");
+            gn.Add("c", "to", "z");
+            gn.Add("z", "to", "out_a", true);
+            gn.Add("x", "to", "out_b", true);
+            gn.Add("z", "to", "out_b", true);
+            gn.Add("z", "to", "out_c", true);
+
+            //create some inputs
+            var a = gn.Node("in_a", "to", "a");
+            var b = gn.Node("in_b", "to", "b");
+            var c = gn.Node("in_c", "to", "c");
+
+            //train the net with examples of these inputs to outputs
+            gn.Train(gn.NewExample(a, "out_a"), gn.NewExample(b, "out_b"), gn.NewExample(c, "out_c"));
+
+            Assert.AreEqual("out_b", gn.Predict(gn.Node("test", "to", "x")).ToString());
+            Assert.AreEqual("out_b", gn.Predict(gn.Node("test", "to", "b")).ToString());
+            Assert.AreEqual("out_c", gn.Predict(gn.Node("test", "to", "c")).ToString());
         }
     }
  }
