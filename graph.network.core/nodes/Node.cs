@@ -11,6 +11,7 @@ namespace graph.network.core.nodes
         public Node(object value)
         {
             Value = value;
+            Result = value;
         }
 
 
