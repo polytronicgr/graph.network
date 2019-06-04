@@ -149,7 +149,7 @@ namespace graph.network.core
             {
                 foreach (var o in output.GetInterface())
                 {
-                    AddPath(i, o, results);
+                    AddPath(i, o, input, results);
                 }
             }
 
@@ -176,7 +176,7 @@ namespace graph.network.core
             return results;
         }
         
-        private void AddPath(Node inputInterfaceNode, Node outputInterfaceNode, List<NodePath> paths)
+        private void AddPath(Node inputInterfaceNode, Node outputInterfaceNode, Node masterInputNode, List<NodePath> paths)
         {
             IEnumerable <IEnumerable<Edge>> found = graph.RankedShortestPathHoffmanPavley(n => 1, inputInterfaceNode, outputInterfaceNode, 10);
             foreach (var path in found)
@@ -184,7 +184,7 @@ namespace graph.network.core
                 if (path != null)
                 {
                     NodePath nodePath = new NodePath(path);
-                    if (inputInterfaceNode.IsPathValid(this, nodePath) && outputInterfaceNode.IsPathValid(this, nodePath))
+                    if (masterInputNode.IsPathValid(this, nodePath) && inputInterfaceNode.IsPathValid(this, nodePath) && outputInterfaceNode.IsPathValid(this, nodePath))
                     {
                         paths.Add(nodePath);
                         return;

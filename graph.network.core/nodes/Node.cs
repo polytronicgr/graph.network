@@ -36,7 +36,18 @@ namespace graph.network.core.nodes
 
         public static void BaseOnAdd(Node node, GraphNet graph)
         {
-            node.Edges.ForEach(e => graph.Add(e));
+            node.Edges.ForEach(e =>
+            {
+                if (e.Obj != node && !graph.ContainsNode(e.Obj))
+                {
+                    node.DependentNodes.Add(e.Obj);
+                }
+                if (e.Subject != node && !graph.ContainsNode(e.Subject))
+                {
+                    node.DependentNodes.Add(e.Subject);
+                }
+                graph.Add(e);
+            });
         }
 
         public virtual void OnProcess(GraphNet graph, List<NodePath> results)
@@ -45,36 +56,41 @@ namespace graph.network.core.nodes
 
         public virtual void OnRemove(GraphNet graph)
         {
-            foreach (var e in Edges)
+            BaseOnRemove(this, graph);
+        }
+
+        public static void BaseOnRemove(Node node, GraphNet graph)
+        {
+            foreach (var e in node.Edges)
             {
                 graph.Remove(e);
             }
 
-            if (RemoveOrphanedEdgeObjs)
+            node.DependentNodes.ForEach(n =>
             {
-                Edges.ForEach(e =>
+                if (graph.ContainsNode(n))
                 {
-                    if (graph.ContainsNode(e.Obj) && (e.Internal || graph.IsEdgesEmpty(e.Obj) ) )
-                    {
-                        graph.Remove(e.Obj);
-                    }
-                });
-            }
-        }
+                    graph.Remove(n);
+                }
+            });
 
+        }
         public virtual bool IsPathValid(GraphNet graph, NodePath path)
         {
-            return BaseIsPathValid(graph, path);
+            return BaseIsPathValid(this, graph, path);
         }
 
-        public static bool BaseIsPathValid(GraphNet graph, NodePath path)
+        public static bool BaseIsPathValid(Node node,  GraphNet graph, NodePath path)
         {
             if (path.HasLoop) return false;
-            var passesThroughAnOutput = path.Skip(1).Take(path.Count - 2).Any(n => graph.Outputs.Contains(n));
-            return !passesThroughAnOutput;
+            var passesThroughAnOutputOrThisNode = path.Skip(1).Take(path.Count - 2).Any(n => n== node || graph.Outputs.Contains(n) );
+            return !passesThroughAnOutputOrThisNode;
         }
 
         public virtual List<Edge> Edges { get; set; } = new List<Edge>();
+        public virtual List<Node> DependentNodes { get; private set; } = new List<Node>();
+
+
         public virtual bool RemoveOrphanedEdgeObjs { get; set; } = true;
         public object Result { get; set; }
 

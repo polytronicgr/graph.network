@@ -128,54 +128,35 @@ namespace graph.network.core.tests
                 .ToList();
                 //set these to be the edges of this node
                 node.Edges = words;
-                //and add them to the graph
-                node.Edges.ForEach(e => graph.Add(e.Obj, false));
+                Node.BaseOnAdd(node, graph);
 
                 //we also need a way to link words to the true false outputs
                 var trueNode = graph.GetNode(true);
                 trueNode.Edges = words.Select(e => new Edge(trueNode, e.Predicate, e.Obj)).ToList();
-                trueNode.Edges.ForEach(e => graph.Add(e));
+                Node.BaseOnAdd(trueNode, graph);
+
                 var falseNode = graph.GetNode(false);
                 falseNode.Edges = words.Select(e => new Edge(falseNode, e.Predicate, e.Obj)).ToList();
-                falseNode.Edges.ForEach(e => graph.Add(e));
-            };
-
-            //we also need to remove these nodes afterwards
-            Action<Node, GraphNet> onRemove = (node, graph) =>
-            {
-                //clear the edges from this
-                node.Edges.ForEach(e => graph.Remove(e));
-                //clear the mirrored dynamic output edges too
-                graph.GetNode(true).Edges.ForEach(e => graph.Remove(e));
-                graph.GetNode(false).Edges.ForEach(e => graph.Remove(e));
-                //finally clear the word nodes themselves
-                node.Edges.ForEach(e =>
-                {
-                    //(as long as they are not entities in the knowlage graph!)
-                    if (graph.IsEdgesEmpty(e.Obj))
-                    {
-                        graph.Remove(e.Obj);
-                    }
-                });
+                Node.BaseOnAdd(falseNode, graph);
             };
 
             //train some examples of true and falase statments 
             gn.Train(
-                 new Example(new DynamicNode("london is a city", tokeniser, onRemove), gn.Node(true))
-                , new Example(new DynamicNode("london is the caplital of uk", tokeniser, onRemove), gn.Node(true))
-                , new Example(new DynamicNode("london is a country", tokeniser, onRemove), gn.Node(false))
-                , new Example(new DynamicNode("uk is a country", tokeniser, onRemove), gn.Node(true))
-                , new Example(new DynamicNode("britain is a country", tokeniser, onRemove), gn.Node(true))
-                , new Example(new DynamicNode("britain is a city", tokeniser, onRemove), gn.Node(false))
-                , new Example(new DynamicNode("uk is a city", tokeniser, onRemove), gn.Node(false))
+                 new Example(new DynamicNode("london is a city", tokeniser), gn.Node(true))
+                , new Example(new DynamicNode("london is the caplital of uk", tokeniser), gn.Node(true))
+                , new Example(new DynamicNode("london is a country", tokeniser), gn.Node(false))
+                , new Example(new DynamicNode("uk is a country", tokeniser), gn.Node(true))
+                , new Example(new DynamicNode("britain is a country", tokeniser), gn.Node(true))
+                , new Example(new DynamicNode("britain is a city", tokeniser), gn.Node(false))
+                , new Example(new DynamicNode("uk is a city", tokeniser), gn.Node(false))
             );
 
             //now we can ask questions about entities that are in the knowlage graph but the training has not seen
-            Assert.AreEqual("True", gn.Predict(new DynamicNode("paris is a city", tokeniser, onRemove)).ToString());
-            Assert.AreEqual("False", gn.Predict(new DynamicNode("paris is a country", tokeniser, onRemove)).ToString());
-            Assert.AreEqual("True", gn.Predict(new DynamicNode("is france a country ?", tokeniser, onRemove)).ToString());
-            Assert.AreEqual("False", gn.Predict(new DynamicNode("france is a city", tokeniser, onRemove)).ToString());
-            Assert.AreEqual("True", gn.Predict(new DynamicNode("lon is a city", tokeniser, onRemove)).ToString());
+            Assert.AreEqual("True", gn.Predict(new DynamicNode("paris is a city", tokeniser)).ToString());
+            Assert.AreEqual("False", gn.Predict(new DynamicNode("paris is a country", tokeniser)).ToString());
+            Assert.AreEqual("True", gn.Predict(new DynamicNode("is france a country ?", tokeniser)).ToString());
+            Assert.AreEqual("False", gn.Predict(new DynamicNode("france is a city", tokeniser)).ToString());
+            Assert.AreEqual("True", gn.Predict(new DynamicNode("lon is a city", tokeniser)).ToString());
             //TOOD: this example may require path convolution and a deeper net (lon is london + london not a country) Assert.AreEqual("False", gn.Predict(new DynamicNode("lon is a country", tokeniser, onRemove)).ToString());
         }
 
@@ -236,33 +217,34 @@ namespace graph.network.core.tests
                 }
             };
 
-            //(3) some special nodes for the params that can pull numbers from the paths to them
-            Func<Node, GraphNet, NodePath, bool> extractNumber = (node, graph, path) =>
+            //(3) some special nodes for the params that are only valid if they start with numbers and can pull those numbers
+            Func<Node, GraphNet, NodePath, bool> isNumber = (node, graph, path) =>
             {
-                //node.Result = null;
-                if (!Node.BaseIsPathValid(graph, path)) return false;
-                foreach (var n in path)
+                return Node.BaseIsPathValid(node, graph, path) && path[0].Value.ToString().All(char.IsDigit);
+            };
+
+            Action<Node, GraphNet, List<NodePath>> extractNumber = (node, graph, paths) =>
+            {
+                //TODO: should the paths just be the ones to this node???
+                var firstPathToThisNode = paths.Where(p=> p[p.Count-1]==node && !p[0].GetProp<bool>("used")).FirstOrDefault(); 
+                if (firstPathToThisNode != null)
                 {
-                    if (n.Value.ToString().All(char.IsDigit) && !n.GetProp<bool>("used"))
-                    {
-                        node.Result = decimal.Parse(n.Value.ToString());
-                        n.SetProp("used", true);
-                        return true;
-                    }
+                    var start = firstPathToThisNode[0];
+                    node.Result = decimal.Parse(start.Value.ToString());
+                    start.SetProp("used", true);
                 }
-                return false;
             };
 
             //add these complex ouput nodes
             var add = new DynamicNode("add", onProcess: calculate);
-            add.AddEdge("param1", new DynamicNode("add_x", isPathValid: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
-            add.AddEdge("param2", new DynamicNode("add_y", isPathValid: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
+            add.AddEdge("param1", new DynamicNode("add_x", isPathValid: isNumber, onProcess: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
+            add.AddEdge("param2", new DynamicNode("add_y", isPathValid: isNumber, onProcess: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
             add.AddEdge("opp", "+", gn.NodeIndex);
             gn.Add(add, true);
 
             var minus = new DynamicNode("minus", onProcess: calculate);
-            minus.AddEdge("param1", new DynamicNode("minus_x", isPathValid: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
-            minus.AddEdge("param2", new DynamicNode("minus_y", isPathValid: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
+            minus.AddEdge("param1", new DynamicNode("minus_x", isPathValid: isNumber, onProcess: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
+            minus.AddEdge("param2", new DynamicNode("minus_y", isPathValid: isNumber, onProcess: extractNumber), gn.NodeIndex).AddEdge("must_be", "number", gn.NodeIndex);
             minus.AddEdge("opp", "-", gn.NodeIndex);
             gn.Add(minus, true);
 
