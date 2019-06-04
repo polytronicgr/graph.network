@@ -42,7 +42,7 @@ namespace graph.network.core.tests
         [Test]
         public void SimpleQuestionAndAnswer()
         {
-            //cerate a small knowlage graph with information about areas
+            //cerate a small knowlage graph with information about areas and a couple of true/false output nodes
             var gn = new GraphNet(maxNumberOfPaths: 10);
             gn.Add("london", "is_a", "city");
             gn.Add("london", "capital_of", "uk");
@@ -51,12 +51,11 @@ namespace graph.network.core.tests
             gn.Add("paris", "capital_of", "france");
             gn.Add("uk", "is_a", "country");
             gn.Add("france", "is_a", "country");
-            //it also has a couple of output nodes for answering yes/no questions
             gn.Add(gn.Node(true), true);
             gn.Add(gn.Node(false), true);
 
             //NLP tokeniser that creates an node for each word and 
-            //also adds these words to the true and false output nodes so that we can
+            //also add these words to the true and false output nodes so that we can
             //map the paths between words: (london >> is_a >> city >> true)
             Action<Node, GraphNet> tokeniser = (node, graph) =>
             {
