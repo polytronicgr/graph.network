@@ -10,6 +10,7 @@ namespace graph.network.core.tests
     public class GraphNetTests
     {
         //TODO: look at test and see how things can be simplifed with prototypes
+        //TODO: review calculator and try to simplify it again 
         //TODO: review all todos 
         //TODO: add a test of a nested GraphNet
         //TODO: add UI
