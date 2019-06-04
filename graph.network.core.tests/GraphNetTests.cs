@@ -13,9 +13,10 @@ namespace graph.network.core.tests
         //TODO: review calculator and try to simplify it again 
         //TODO: review all todos 
         //TODO: add a test of a nested GraphNet
+        //TODO: paris is the capital of france and 3 x 5
         //TODO: add UI
         //TODO: performace test
-        //TODO: paris is the capital of france
+
 
         [Test]
         public void SuperHeros()
@@ -143,6 +144,10 @@ namespace graph.network.core.tests
                 {
                     node.Result = x - y;
                 }
+                else if (node.Value.ToString() == "times")
+                {
+                    node.Result = x * y;
+                }
             };
 
             //(3) some special nodes for the params that are only valid if they start with numbers ...
@@ -178,16 +183,26 @@ namespace graph.network.core.tests
             minus.AddEdge("opp", "-", gn);
             gn.Add(minus, true);
 
+            var times = new DynamicNode("times", onProcess: calculate);
+            times.AddEdge("param1", new DynamicNode("times_x", isPathValid: isNumber, onProcess: extractNumber), gn).AddEdge("must_be", "number", gn);
+            times.AddEdge("param2", new DynamicNode("times_y", isPathValid: isNumber, onProcess: extractNumber), gn).AddEdge("must_be", "number", gn);
+            times.AddEdge("opp", "*", gn);
+            gn.Add(times, true);
+
             //teach it the basic math funcitons
             gn.Train(
-                    new Example(new DynamicNode("1 + 2", tokeniser), add),
-                    new Example(new DynamicNode("1 - 2", tokeniser), minus)
+                      new Example(new DynamicNode("1 + 2", tokeniser), add)
+                    , new Example(new DynamicNode("1 - 2", tokeniser), minus)
+                    , new Example(new DynamicNode("1 * 2", tokeniser), times)
+                    //, new Example(new DynamicNode("1 x 2", tokeniser), times)
             );
 
             //test
             Assert.AreEqual(15, gn.Predict(new DynamicNode("5 + 10", tokeniser)).Result);
             Assert.AreEqual(2, gn.Predict(new DynamicNode("5 - 3", tokeniser)).Result);
             Assert.AreEqual(4, gn.Predict(new DynamicNode("what is 5 - 1", tokeniser)).Result);
+            Assert.AreEqual(21, gn.Predict(new DynamicNode("3 * 7", tokeniser)).Result);
+            //Assert.AreEqual(15, gn.Predict(new DynamicNode("3 x 5", tokeniser)).Result);
         }
 
         [Test]
