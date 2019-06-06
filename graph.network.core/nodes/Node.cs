@@ -89,7 +89,7 @@ namespace graph.network.core.nodes
         /// <returns></returns>
         public IEnumerable<Node> GetInterface()
         {
-            //TODO: could cache this 
+            //NOTE: could cache this 
             return Edges.Count > 0 ? Edges.Select(e => e.Obj) : new List<Node> { this };
         }
 

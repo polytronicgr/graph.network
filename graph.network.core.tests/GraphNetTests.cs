@@ -9,14 +9,11 @@ namespace graph.network.core.tests
     [TestFixture]
     public class GraphNetTests
     {
-        //TODO: look at test and see how things can be simplifed with prototypes
-        //TODO: review calculator and try to simplify it again 
-        //TODO: review all todos 
         //TODO: add a test of a nested GraphNet
         //TODO: paris is the capital of france and 3 x 5
         //TODO: add UI
         //TODO: performace test
-
+        //TODO: review calculator and try to simplify it again 
 
         [Test]
         public void SuperHeros()
