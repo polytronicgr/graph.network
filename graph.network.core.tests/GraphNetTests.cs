@@ -107,20 +107,17 @@ namespace graph.network.core.tests
                 //add nodes for words
                 var words = node.Value.ToString().Split(' ');
                 gn.Node(node, "word", words);
-                
-                //mark any of those words that are numbers
-                var numbers = node.Edges
-                    .Where(e => e.Obj.Value.ToString().All(char.IsDigit))
-                    .Select(e=> e.Obj);
-                foreach (var word in numbers)
+                //mark any of those words that are numbers by adding an edge to the number node
+                foreach (var e in node.Edges.Where(e => e.Obj.Value.ToString().All(char.IsDigit)))
                 {
-                    word.AddEdge(gn.Node("a"), gn.Node("number"));
+                    e.Obj.AddEdge(gn.Node("a"), gn.Node("number"));
                 }
 
                 Node.BaseOnAdd(node, graph);
             };
 
-            //(2) some output nodes that will be able to do the maths
+            //(2) some output nodes that will be able to do the maths. 
+            //Note they store the restuls in the Result property of the node
             Action<Node, GraphNet, List<NodePath>> calculate = (node, graph, paths) =>
             {
                 //get the x and y edges and their results
