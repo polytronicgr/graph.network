@@ -54,38 +54,36 @@ namespace graph.network.core.tests
             gn.Add(gn.Node(true), true);
             gn.Add(gn.Node(false), true);
 
-            //NLP tokeniser that creates an node for each word and 
+            //register a NLP tokeniser node that creates an edge for each word and 
             //also add these words to the true and false output nodes so that we can
             //map the paths between words: (london >> is_a >> city >> true)
-            Action<Node, GraphNet> tokeniser = (node, graph) =>
+            gn.RegisterDynamic("ask", (node, graph) =>
             {
                 var words = node.Value.ToString().Split(' ');
                 gn.Node(node, "word", words);
                 Node.BaseOnAdd(node, graph);
                 gn.Node(true, "word", words);
                 gn.Node(false, "word", words);
-            };
+            });
 
-            //gn.RegisterDynamic("ask", tokeniser);
-            //could make gn a dynamic: gn.ask("london is a city")
 
-            //train some examples of true and false statments 
+            //train some examples of true and false statments using the NLP 'ask' node as the input 
             gn.Train(
-                  new Example(new DynamicNode("london is a city", tokeniser), gn.Node(true))
-                , new Example(new DynamicNode("london is the caplital of uk", tokeniser), gn.Node(true))
-                , new Example(new DynamicNode("london is the caplital of france", tokeniser), gn.Node(false))
-                , new Example(new DynamicNode("london is a country", tokeniser), gn.Node(false))
-                , new Example(new DynamicNode("uk is a country", tokeniser), gn.Node(true))
-                , new Example(new DynamicNode("uk is a city", tokeniser), gn.Node(false))
+                  new Example(gn.DynamicNode("ask")("london is a city"), gn.Node(true))
+                , new Example(gn.DynamicNode("ask")("london is the caplital of uk"), gn.Node(true))
+                , new Example(gn.DynamicNode("ask")("london is the caplital of france"), gn.Node(false))
+                , new Example(gn.DynamicNode("ask")("london is a country"), gn.Node(false))
+                , new Example(gn.DynamicNode("ask")("uk is a country"), gn.Node(true))
+                , new Example(gn.DynamicNode("ask")("uk is a city"), gn.Node(false))
             );
 
             //now we can ask questions about entities that are in the knowlage graph but the training has not seen
-            Assert.AreEqual(true, gn.Predict(new DynamicNode("paris is a city", tokeniser)));
-            Assert.AreEqual(false, gn.Predict(new DynamicNode("paris is a country", tokeniser)));
-            Assert.AreEqual(true, gn.Predict(new DynamicNode("is france a country ?", tokeniser)));
-            Assert.AreEqual(false, gn.Predict(new DynamicNode("france is a city", tokeniser)));
-            Assert.AreEqual(true, gn.Predict(new DynamicNode("york is a city", tokeniser)));
-            Assert.AreEqual(false, gn.Predict(new DynamicNode("ding-dong is a city", tokeniser)));
+            Assert.AreEqual(true, gn.Predict(gn.DynamicNode("ask")("paris is a city")));
+            Assert.AreEqual(false, gn.Predict(gn.DynamicNode("ask")("paris is a country")));
+            Assert.AreEqual(true, gn.Predict(gn.DynamicNode("ask")("is france a country ?")));
+            Assert.AreEqual(false, gn.Predict(gn.DynamicNode("ask")("france is a city")));
+            Assert.AreEqual(true, gn.Predict(gn.DynamicNode("ask")("york is a city")));
+            Assert.AreEqual(false, gn.Predict(gn.DynamicNode("ask")("ding-dong is a city")));
             //TODO: Assert.AreEqual("True", gn.Predict(new DynamicNode("paris is the capital of france", tokeniser)).Result());
             //TODO:Assert.AreEqual("False", gn.Predict(new DynamicNode("paris is the capital of the uk", tokeniser)).Result());
         }

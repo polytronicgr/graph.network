@@ -11,9 +11,11 @@ namespace graph.network.core
     public class GraphNet
     {
         private BidirectionalGraph<Node, Edge> graph = new BidirectionalGraph<Node, Edge>();
+        private Dictionary<string, Action<Node, GraphNet>> dynamicPrototypes = new Dictionary<string, Action<Node, GraphNet>>();
         private Net net;
         private readonly int maxPathLenght;
         private readonly int maxNumberOfPaths;
+
 
         public List<Node> Outputs { get; set; } = new List<Node>();
         public Dictionary<object, Node> NodeIndex { get; set; } = new Dictionary<object, Node>();
@@ -23,11 +25,13 @@ namespace graph.network.core
             this.maxPathLenght = maxPathLenght;
             this.maxNumberOfPaths = maxNumberOfPaths;
         }
-
+       
         public Node Node(Node subject, string predicate, params string[] objs)
         {
             return Node(subject.Value, predicate, objs);
         }
+
+      
 
         public Node Node(object subject, string predicate, params string[] objs)
         {
@@ -52,6 +56,7 @@ namespace graph.network.core
                 return node;
             }
         }
+        
         public Node Node(object value)
         {
             if(NodeIndex.ContainsKey(value))  return NodeIndex[value];
@@ -100,7 +105,20 @@ namespace graph.network.core
             graph.AddVertex(node);
             node.OnAdd(this);
         }
-        
+
+        public void RegisterDynamic(string name, Action<Node, GraphNet> onAdd = null)
+        {
+            dynamicPrototypes[name] = onAdd;
+        }
+
+        public Func<object, DynamicNode> DynamicNode(string name)
+        {
+            
+            var onAdd = dynamicPrototypes[name];
+            Func<object, DynamicNode> result = (value) => new DynamicNode(value, onAdd);
+            return result;
+        }
+
         public void Add(Edge edge)
         {
             Add(edge.Subject, false);
