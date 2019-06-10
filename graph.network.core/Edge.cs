@@ -16,5 +16,29 @@ namespace graph.network.core
         public Node Predicate { get; }
         public Node Obj { get; }
         public bool Internal { get; set; }
+
+
+        public override bool Equals(object obj)
+        {
+            var id = ToString();
+            if (id == null && obj != null) return false;
+            if (id != null && obj == null) return false;
+            if (id == null && obj == null) return true;
+            if (id.Equals(obj.ToString())) return true;
+
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return ToString().GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            //NOTE: could cache this
+            return$"{Subject.Value}|{Predicate.Value}|{Obj.Value}";
+        }
     }
 }

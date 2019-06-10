@@ -1,5 +1,7 @@
 ﻿using graph.network.core.nodes;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace graph.network.core
 {
@@ -23,9 +25,37 @@ namespace graph.network.core
             }
         }
 
+        public override bool Equals(object obj)
+        {
+            var id = ToString();
+            if (id == null && obj != null) return false;
+            if (id != null && obj == null) return false;
+            if (id == null && obj == null) return true;
+            if (id.Equals(obj.ToString())) return true;
+
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return ToString().GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            //NOTE: could cache this
+            var sb = new StringBuilder();
+            foreach (var item in this)
+            {
+                sb.Append($">{item.Value}");
+            }
+            return sb.ToString();
+        }
+
         private void MarkLooped(Node node)
         {
-            if (Contains(node))
+            if (this.Any(n=> node.Value.Equals(n.Value)))
             {
                 HasLoop = true;
             }

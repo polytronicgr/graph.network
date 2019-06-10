@@ -1,16 +1,13 @@
-﻿using graph.network.core.nodes;
-
-namespace graph.network.core.tests
+﻿namespace graph.network.core
 {
     public class Example
     {
-        public Example(Node input, Node output)
+        public object Output { get; }
+        public object Input { get; }
+        public Example(object input, object output)
         {
-            this.Input = input;
-            this.Output = output;
+            Input = input;
+            Output = output;
         }
-
-        public Node Output { get; }
-        public Node Input { get; }
     }
 }

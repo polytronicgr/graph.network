@@ -22,8 +22,15 @@ namespace graph.network.core.nodes
             BaseOnAdd(this, graph);
         }
 
+        public virtual void Train(params Example[] examples)
+        {
+
+        }
+
         public static void BaseOnAdd(Node node, GraphNet graph)
         {
+            //NOTE: is this OK to just clear these (think about multi nested GraphNets)
+            node.DependentNodes.Clear(); 
             node.Edges.ForEach(e =>
             {
                 if (e.Obj != node && !graph.ContainsNode(e.Obj))
@@ -38,7 +45,7 @@ namespace graph.network.core.nodes
             });
         }
 
-        public virtual void OnProcess(GraphNet graph, List<NodePath> results)
+        public virtual void OnProcess(GraphNet graph, Node input, List<NodePath> results)
         {
         }
 
@@ -70,7 +77,7 @@ namespace graph.network.core.nodes
         public static bool BaseIsPathValid(Node node,  GraphNet graph, NodePath path)
         {
             if (path.HasLoop) return false;
-            var passesThroughAnOutputOrThisNode = path.Skip(1).Take(path.Count - 2).Any(n => n== node || graph.Outputs.Contains(n) );
+            var passesThroughAnOutputOrThisNode = path.Skip(1).Take(path.Count - 2).Any(n => n.Equals(node) || graph.Outputs.Contains(n) );
             return !passesThroughAnOutputOrThisNode;
         }
 
@@ -120,7 +127,7 @@ namespace graph.network.core.nodes
             return Value?.ToString();
         }
 
-        /*
+        
         public override bool Equals(object obj)
         {
             if (Value == null && obj != null) return false;
@@ -137,7 +144,7 @@ namespace graph.network.core.nodes
         {
             return Value.GetHashCode();
         }
-        */
+       
 
         public Edge GetEdgeByPredicate(object value)
         {

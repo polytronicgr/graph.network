@@ -9,16 +9,19 @@ namespace graph.network.core.tests
     [TestFixture]
     public class GraphNetTests
     {
-        //TODO: add a test of a nested GraphNet
-        //TODO: paris is the capital of france and 3 x 5
+        //TODO: run through todos
+        //TODO: simplify tests again (new way of doing calc + use new default input)
         //TODO: add UI
+        //TODO: paris is the capital of france and 3 x 5
+        //TODO: A/B testing of nodes (training based on hard coded)
+        //TODO: think about issues with add/registering nodes 
+        //TODO: review calculator and try to simplify it again
         //TODO: performace test
-        //TODO: review calculator and try to simplify it again 
 
         [Test]
         public void SuperHeros()
         {
-            var gn = new GraphNet(maxPathLenght:10, maxNumberOfPaths: 5);
+            var gn = new GraphNet("gn", maxPathLenght:10, maxNumberOfPaths: 5);
             gn.Add("spider_man", "is_a", "super_hero");
             gn.Add("hulk", "is_a", "super_hero");
             gn.Add("green_goblin", "is_a", "super_villain");
@@ -40,7 +43,7 @@ namespace graph.network.core.tests
         public void SimpleQuestionAndAnswer()
         {
             //create a small knowlage graph with information about areas and a couple of true/false output nodes
-            var gn = new GraphNet(maxNumberOfPaths: 10);
+            var gn = new GraphNet("gn", maxNumberOfPaths: 10);
             gn.Add("london", "is_a", "city");
             gn.Add("london", "capital_of", "uk");
             gn.Add("paris", "is_a", "city");
@@ -66,12 +69,12 @@ namespace graph.network.core.tests
 
             //train some examples of true and false statments using the NLP 'ask' node as the input 
             gn.Train(
-                  new Example(gn.DynamicNode("ask")("london is a city"), gn.Node(true))
-                , new Example(gn.DynamicNode("ask")("london is the caplital of uk"), gn.Node(true))
-                , new Example(gn.DynamicNode("ask")("london is the caplital of france"), gn.Node(false))
-                , new Example(gn.DynamicNode("ask")("london is a country"), gn.Node(false))
-                , new Example(gn.DynamicNode("ask")("uk is a country"), gn.Node(true))
-                , new Example(gn.DynamicNode("ask")("uk is a city"), gn.Node(false))
+                  new NodeExample(gn.DynamicNode("ask")("london is a city"), gn.Node(true))
+                , new NodeExample(gn.DynamicNode("ask")("london is the caplital of uk"), gn.Node(true))
+                , new NodeExample(gn.DynamicNode("ask")("london is the caplital of france"), gn.Node(false))
+                , new NodeExample(gn.DynamicNode("ask")("london is a country"), gn.Node(false))
+                , new NodeExample(gn.DynamicNode("ask")("uk is a country"), gn.Node(true))
+                , new NodeExample(gn.DynamicNode("ask")("uk is a city"), gn.Node(false))
             );
 
             //now we can ask questions about entities that are in the knowlage graph but the training has not seen
@@ -89,7 +92,7 @@ namespace graph.network.core.tests
         public void Calculator()
         {
             //small graph of operators
-            var gn = new GraphNet(maxNumberOfPaths: 10);
+            var gn = new GraphNet("gn", maxNumberOfPaths: 10);
             gn.Add(gn.Node("number"));
             gn.Add("+", "a", "operand");
             gn.Add("-", "a", "operand");
@@ -115,7 +118,7 @@ namespace graph.network.core.tests
 
             //(2) some output nodes that will be able to do the maths. 
             //Note they store the restuls in the Result property of the node
-            Action<Node, GraphNet, List<NodePath>> calculate = (node, graph, paths) =>
+            Action<Node, GraphNet, Node, List<NodePath>> calculate = (node, graph, input, paths) =>
             {
                 //get the x and y edges and their results
                 var x1 = node.GetEdgeByPredicate("param1").Obj;
@@ -148,7 +151,7 @@ namespace graph.network.core.tests
             };
 
             //... and they can pull those numbers out and store them in the nodes result
-            Action<Node, GraphNet, List<NodePath>> extractNumber = (node, graph, paths) =>
+            Action<Node, GraphNet, Node, List<NodePath>> extractNumber = (node, graph, input, paths) =>
             {
                 //get any paths that end in this node whose input has not been used by another node
                 var firstPathToThisNode = paths.Where(p=> p[p.Count-1]==node && !p[0].GetProp<bool>("used")).FirstOrDefault(); 
@@ -182,9 +185,9 @@ namespace graph.network.core.tests
 
             //teach it the basic math funcitons
             gn.Train(
-                      new Example(new DynamicNode("1 + 2", tokeniser), add)
-                    , new Example(new DynamicNode("1 - 2", tokeniser), minus)
-                    , new Example(new DynamicNode("1 * 2", tokeniser), times)
+                      new NodeExample(new DynamicNode("1 + 2", tokeniser), add)
+                    , new NodeExample(new DynamicNode("1 - 2", tokeniser), minus)
+                    , new NodeExample(new DynamicNode("1 * 2", tokeniser), times)
                     //, new Example(new DynamicNode("1 x 2", tokeniser), times)
             );
 
@@ -197,10 +200,124 @@ namespace graph.network.core.tests
         }
 
         [Test]
+        public void TestNestedGraphNets()
+        {
+            //=================================================================
+            //create a GraphNet for predicting if a super is good or bad
+            //=================================================================
+            var supers = new GraphNet("supers");
+            supers.RegisterDynamic("enitiy", (node, graph) => {
+                var words = node.Value.ToString().Split('_');
+                graph.Node(node, "word", words);
+                node.AddEdge("entity_name", graph.Node(node.Value.ToString().Replace("_", " ")), graph);
+                Node.BaseOnAdd(node, graph);
+            });
+            supers.AddDynamic("enitiy", "spider_man", "is_a", "super_hero");
+            supers.AddDynamic("enitiy", "hulk", "is_a", "super_hero");
+            supers.AddDynamic("enitiy", "green_goblin", "is_a", "super_villain");
+            supers.AddDynamic("enitiy", "red_king", "is_a", "super_villain");
+            supers.AddDynamic("enitiy", "donald_trump", "is_a", "super_villain");
+            supers.Add("super_hero", "is", "good", true);
+            supers.Add("super_villain", "is", "bad", true);
+
+            //=================================================================
+            //create another GN that can do simple caculations
+            //=================================================================
+            var calc = new GraphNet("calc");
+            calc.Add("add_opp", "lable", "+");
+            calc.Add("times_opp", "lable", "*");
+            calc.Add("minus_opp", "lable", "-");
+            calc.Add(new Node("number"));
+            Func<List<NodePath>, IEnumerable<int>> pullNumbers = (paths) =>
+            {
+                var numbers = paths.Where(p => p[0].Value.ToString().All(char.IsDigit) && p[2].Equals(calc.Node("number")))
+                            .Select(p => int.Parse(p[0].Value.ToString()));
+                return numbers;
+            };
+            calc.Add(new DynamicNode("sum"
+                , onProcess: (node, graph, input, paths) => node.Result = pullNumbers(paths).Sum())
+                , true);
+            calc.Node("sum").AddEdge("input", "number", calc);
+            calc.Node("sum").AddEdge("opp", "add_opp", calc);
+
+            calc.Add(new DynamicNode("times"
+                , onProcess: (node, graph, input, paths) => node.Result = pullNumbers(paths).Aggregate(1, (acc, val) => acc * val))
+                , true);
+            calc.Node("times").AddEdge("input", "number", calc);
+            calc.Node("times").AddEdge("opp", "times_opp", calc);
+
+            calc.Add(new DynamicNode("minus"
+            , onProcess: (node, graph, input, paths) => {
+                var n = pullNumbers(paths);
+                if (n.Count() > 0) {
+                    node.Result = n.Aggregate((a, b) => a - b);
+                }
+            })
+            , true);
+            calc.Node("minus").AddEdge("input", "number", calc);
+            calc.Node("minus").AddEdge("opp", "minus_opp", calc);
+
+            //=================================================================
+            //create a simple NLP GN for parsing text
+            //=================================================================
+            var nlp = new GraphNet("nlp");
+            nlp.Add(new DynamicNode("nlp_out", (node, graph) => {
+                node.Result = graph.AllEdges();
+            }), true);
+
+            nlp.RegisterDynamic("text", (node, graph) =>
+            {
+                //add nodes for each word
+                var words = node.Value.ToString().Split(' ');
+                nlp.Node(node, "word", words);
+                //mark any of those words that are numbers by adding an edge to the number node
+                foreach (var e in node.Edges.Where(e => e.Obj.Value.ToString().All(char.IsDigit)))
+                {
+                    e.Obj.AddEdge(nlp.Node("a"), nlp.Node("number"));
+                }
+
+                Node.BaseOnAdd(node, graph);
+            });
+            //=================================================================
+            //now we create the master GraphNet and add these sub ones to it
+            //=================================================================
+            //TODO: why are there so many paths???
+            var gn = new GraphNet("gn", maxNumberOfPaths: 40);
+            gn.RegisterDynamic("ask", (node , graph) => {
+                Node ask = nlp.DynamicNode("text")(node.Value.ToString());
+                //TODO: this would be better: node.AddEdge(graph.Node("nlp"), ask);
+                nlp.Add(ask);
+                node.Edges = nlp.AllEdges();
+                nlp.Remove(ask);
+                Node.BaseOnAdd(node, graph);
+            });
+            gn.DefaultInput = "ask";
+            gn.Add(supers, true);
+            gn.Add(calc, true);
+
+            //we train it with some examples
+            gn.Train(
+                  new Example(gn.Node("2 * 3"), 6) 
+                , new Example(gn.Node("4 + 1"), 5)
+                , new Example(gn.Node("6 - 5"), 1)
+                , new Example(gn.Node("spider man"), "good")
+                , new Example(gn.Node("green goblin"), "bad")
+            );
+
+            //and then this one net can aswer both typoes of question
+            //TODO: add a default input node so you can just go gn.Predict("hulk") and it will go the ask by default
+            Assert.AreEqual("good", gn.Predict("hulk"));
+            Assert.AreEqual("bad", gn.Predict("red king"));
+            Assert.AreEqual(17, gn.Predict("5 + 12"));
+            Assert.AreEqual(60, gn.Predict("5 * 12"));
+            Assert.AreEqual(1, gn.Predict("what is 10 - 9"));
+        }
+
+        [Test]
         public void BasicExample()
         {
             //set up a simple graph
-            var gn = new GraphNet(maxPathLenght: 10, maxNumberOfPaths: 5);
+            var gn = new GraphNet("gn", maxPathLenght: 10, maxNumberOfPaths: 5);
             gn.Add("a", "to", "z");
             gn.Add("b", "to", "z");
             gn.Add("c", "to", "z");
@@ -232,7 +349,7 @@ namespace graph.network.core.tests
         public void MultiPathExample()
         {
             //set up a simple graph
-            var gn = new GraphNet(maxPathLenght: 10, maxNumberOfPaths: 5);
+            var gn = new GraphNet("gn", maxPathLenght: 10, maxNumberOfPaths: 5);
             gn.Add("a", "to", "z");
             gn.Add("b", "to", "z");
             gn.Add("c", "to", "z");
