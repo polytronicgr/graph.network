@@ -56,7 +56,7 @@ namespace graph.network.core
         public double[,,] GetFeatureData(List<NodePath> paths)
         {
             var result = new double[maxPathLenght, numberOfNodes, maxNumberOfPaths];
-            if (paths.Count >= maxNumberOfPaths) throw new InvalidOperationException("too many paths");
+            if (paths.Count >= maxNumberOfPaths) throw new InvalidOperationException($"too many paths: {paths.Count} > {maxNumberOfPaths}");
             for (int p = 0; p < paths.Count; p++)
             {
                 var path = paths[p];

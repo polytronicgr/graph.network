@@ -9,7 +9,6 @@ namespace graph.network.core.tests
     [TestFixture]
     public class GraphNetTests
     {
-        //TODO: simplify tests again (new way of doing calc + use new default input)
         //TODO: run through todos
         //TODO: add UI
         //TODO: paris is the capital of france and 3 x 5
@@ -96,7 +95,7 @@ namespace graph.network.core.tests
         [Test]
         public void Calculator()
         {
-            //create small graph of operators
+            //create small graph of maths operators
             var gn = new GraphNet("calc");
             gn.Add("add_opp", "lable", "+");
             gn.Add("times_opp", "lable", "*");
@@ -122,13 +121,6 @@ namespace graph.network.core.tests
             gn.Node("sum").AddEdge("input", "number", gn);
             gn.Node("sum").AddEdge("opp", "add_opp", gn);
 
-            //multiply
-            gn.Add(new DynamicNode("times"
-                , onProcess: (node, graph, input, paths) => node.Result = pullNumbers(paths).Aggregate(1, (acc, val) => acc * val))
-                , true);
-            gn.Node("times").AddEdge("input", "number", gn);
-            gn.Node("times").AddEdge("opp", "times_opp", gn);
-
             //subtract
             gn.Add(new DynamicNode("minus"
             , onProcess: (node, graph, input, paths) => {
@@ -141,6 +133,13 @@ namespace graph.network.core.tests
             , true);
             gn.Node("minus").AddEdge("input", "number", gn);
             gn.Node("minus").AddEdge("opp", "minus_opp", gn);
+
+            //multiply
+            gn.Add(new DynamicNode("times"
+                , onProcess: (node, graph, input, paths) => node.Result = pullNumbers(paths).Aggregate(1, (acc, val) => acc * val))
+                , true);
+            gn.Node("times").AddEdge("input", "number", gn);
+            gn.Node("times").AddEdge("opp", "times_opp", gn);
 
             //then we register a tokeniser that adds the word nodes and marks any numbers
             gn.RegisterDynamic("parse", (node, graph) =>
@@ -190,7 +189,18 @@ namespace graph.network.core.tests
             supers.Add("hero", "is", "good", true);
             supers.Add("villain", "is", "bad", true);
 
-            //2: create a GraphNet that can do caculations
+            //2: create a GraphNet that knows about cities
+            var cities = new GraphNet("cities");
+            cities.Add("london", "is_a", "city");
+            cities.Add("paris", "is_a", "city");
+            cities.Add("uk", "is_a", "country");
+            cities.Add("france", "is_a", "country");
+            cities.Add(cities.Node(cities.Node(true), "input", "country", "city"));
+            cities.Add(cities.Node(cities.Node(false), "input", "country", "city"));
+            cities.Outputs.Add(cities.Node(true));
+            cities.Outputs.Add(cities.Node(false));
+
+            //3: create a GraphNet that can do caculations
             var calc = new GraphNet("calc");
             calc.Add("add_opp", "lable", "+");
             calc.Add(new Node("number"));
@@ -206,7 +216,7 @@ namespace graph.network.core.tests
             calc.Node("sum").AddEdge("input", "number", calc);
             calc.Node("sum").AddEdge("opp", "add_opp", calc);
 
-            //3: create a GraphNet for parsing text
+            //4: create a GraphNet for parsing text
             var nlp = new GraphNet("nlp");
             nlp.Add(new DynamicNode("nlp_out", (node, graph) => {
                 node.Result = graph.AllEdges();
@@ -223,7 +233,7 @@ namespace graph.network.core.tests
                 Node.BaseOnAdd(node, graph);
             });
 
-            //4: create the master GraphNet that contains the others as nodes within it
+            //5: create the master GraphNet that contains the other GraphNets as nodes within it
             //TODO: why are there so many paths???
             var gn = new GraphNet("gn", maxNumberOfPaths: 25);
             gn.RegisterDynamic("ask", (node , graph) => {
@@ -236,13 +246,18 @@ namespace graph.network.core.tests
             });
             gn.DefaultInput = "ask";
             gn.Add(supers, true);
+            gn.Add(cities, true);
             gn.Add(calc, true);
 
             //train the master GraphNet with some examples
             gn.Train(
-                  new Example(gn.Node("4 + 1"), 5)
-                , new Example(gn.Node("spider man"), "good")
-                , new Example(gn.Node("green goblin"), "bad")
+                new Example(gn.Node("4 + 1"), 5),
+                new Example(gn.Node("spider man"), "good"),
+                new Example(gn.Node("green goblin"), "bad"),
+                new Example(gn.Node("london is a city"), true),
+                new Example(gn.Node("london is a country"), false),
+                new Example(gn.Node("uk is a country"), true),
+                new Example(gn.Node("uk is a city"), false)
             );
 
             //this master GraphNet can parse text and answer different types of questions:
@@ -250,6 +265,9 @@ namespace graph.network.core.tests
             Assert.AreEqual("bad", gn.Predict("red king"));
             Assert.AreEqual(17, gn.Predict("5 + 12"));
             Assert.AreEqual(27, gn.Predict("7 + 20"));
+            Assert.AreEqual(true, gn.Predict("paris is a city"));
+            Assert.AreEqual(false, gn.Predict("paris is a country"));
+            Assert.AreEqual(true, gn.Predict("france is a country"));
             //TODO: Assert.AreEqual(27, gn.Predict("7 + 7"));
         }
 
