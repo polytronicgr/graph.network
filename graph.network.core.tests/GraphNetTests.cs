@@ -9,8 +9,8 @@ namespace graph.network.core.tests
     [TestFixture]
     public class GraphNetTests
     {
-        //TODO: run through todos
         //TODO: simplify tests again (new way of doing calc + use new default input)
+        //TODO: run through todos
         //TODO: add UI
         //TODO: paris is the capital of france and 3 x 5
         //TODO: A/B testing of nodes (training based on hard coded)
@@ -305,7 +305,6 @@ namespace graph.network.core.tests
             );
 
             //and then this one net can aswer both typoes of question
-            //TODO: add a default input node so you can just go gn.Predict("hulk") and it will go the ask by default
             Assert.AreEqual("good", gn.Predict("hulk"));
             Assert.AreEqual("bad", gn.Predict("red king"));
             Assert.AreEqual(17, gn.Predict("5 + 12"));
