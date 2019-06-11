@@ -69,24 +69,26 @@ namespace graph.network.core.tests
                 gn.Node(false, "word", words);
             });
 
+            //set new nodes to default to creating this 'ask' node
+            gn.DefaultInput = "ask";
 
             //train some examples of true and false statments using the NLP 'ask' node as the input 
             gn.Train(
-                  new NodeExample(gn.DynamicNode("ask")("london is a city"), gn.Node(true))
-                , new NodeExample(gn.DynamicNode("ask")("london is the caplital of uk"), gn.Node(true))
-                , new NodeExample(gn.DynamicNode("ask")("london is the caplital of france"), gn.Node(false))
-                , new NodeExample(gn.DynamicNode("ask")("london is a country"), gn.Node(false))
-                , new NodeExample(gn.DynamicNode("ask")("uk is a country"), gn.Node(true))
-                , new NodeExample(gn.DynamicNode("ask")("uk is a city"), gn.Node(false))
+                  new NodeExample(gn.Node("london is a city"), gn.Node(true))
+                , new NodeExample(gn.Node("london is the caplital of uk"), gn.Node(true))
+                , new NodeExample(gn.Node("london is the caplital of france"), gn.Node(false))
+                , new NodeExample(gn.Node("london is a country"), gn.Node(false))
+                , new NodeExample(gn.Node("uk is a country"), gn.Node(true))
+                , new NodeExample(gn.Node("uk is a city"), gn.Node(false))
             );
 
             //now we can ask questions about entities that are in the knowlage graph but the training has not seen
-            Assert.AreEqual(true, gn.Predict(gn.DynamicNode("ask")("paris is a city")));
-            Assert.AreEqual(false, gn.Predict(gn.DynamicNode("ask")("paris is a country")));
-            Assert.AreEqual(true, gn.Predict(gn.DynamicNode("ask")("is france a country ?")));
-            Assert.AreEqual(false, gn.Predict(gn.DynamicNode("ask")("france is a city")));
-            Assert.AreEqual(true, gn.Predict(gn.DynamicNode("ask")("york is a city")));
-            Assert.AreEqual(false, gn.Predict(gn.DynamicNode("ask")("ding-dong is a city")));
+            Assert.AreEqual(true, gn.Predict("paris is a city"));
+            Assert.AreEqual(false, gn.Predict("paris is a country"));
+            Assert.AreEqual(true, gn.Predict("is france a country ?"));
+            Assert.AreEqual(false, gn.Predict("france is a city"));
+            Assert.AreEqual(true, gn.Predict("york is a city"));
+            Assert.AreEqual(false, gn.Predict("ding-dong is a city"));
             //TODO: Assert.AreEqual("True", gn.Predict(new DynamicNode("paris is the capital of france", tokeniser)).Result());
             //TODO:Assert.AreEqual("False", gn.Predict(new DynamicNode("paris is the capital of the uk", tokeniser)).Result());
         }
