@@ -11,6 +11,7 @@ namespace graph.network.core.tests
     {
         //TODO: add UI
         //TODO: paris is the capital of france and path convolution
+        //TODO: add text predictor and set finder tests
         //TODO: A/B testing of nodes (training based on hard coded)
         //TODO: think about issues with add/registering nodes and dependent nodes
         //TODO: performace test + try with large datasets
