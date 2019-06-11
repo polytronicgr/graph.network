@@ -21,6 +21,7 @@ namespace graph.network.core.tests
         [Test]
         public void SuperHeros()
         {
+            //create a small knowlage graph
             var gn = new GraphNet("gn", maxPathLenght:10, maxNumberOfPaths: 5);
             gn.Add("spider_man", "is_a", "super_hero");
             gn.Add("hulk", "is_a", "super_hero");
@@ -33,8 +34,10 @@ namespace graph.network.core.tests
             gn.Add("villain", "is", "bad", true);
             gn.Add("villain", "is_not", "good", true);
 
+            //train it with some expected answers
             gn.Train(gn.NewExample("spider_man", "good"), gn.NewExample("green_goblin", "bad"));
 
+            //and it can now predict answers to entities it has not been trained on
             Assert.AreEqual("good", gn.Predict("hulk"));
             Assert.AreEqual("bad", gn.Predict("red_king"));
         }
@@ -107,18 +110,22 @@ namespace graph.network.core.tests
                             .Select(p => int.Parse(p[0].Value.ToString()));
                 return numbers;
             };
+
+            //add
             gn.Add(new DynamicNode("sum"
                 , onProcess: (node, graph, input, paths) => node.Result = pullNumbers(paths).Sum())
                 , true);
             gn.Node("sum").AddEdge("input", "number", gn);
             gn.Node("sum").AddEdge("opp", "add_opp", gn);
 
+            //multiply
             gn.Add(new DynamicNode("times"
                 , onProcess: (node, graph, input, paths) => node.Result = pullNumbers(paths).Aggregate(1, (acc, val) => acc * val))
                 , true);
             gn.Node("times").AddEdge("input", "number", gn);
             gn.Node("times").AddEdge("opp", "times_opp", gn);
 
+            //subtract
             gn.Add(new DynamicNode("minus"
             , onProcess: (node, graph, input, paths) => {
                 var n = pullNumbers(paths);
@@ -164,7 +171,9 @@ namespace graph.network.core.tests
         [Test]
         public void TestNestedGraphNets()
         {
-            //create a GraphNet for predicting if a super is good or bad
+            //GraphNets are nodes themselves so they can be added into another GraphNet 
+
+            //1: create a GraphNet for predicting if a super is good or bad
             var supers = new GraphNet("supers");
             supers.RegisterDynamic("enitiy", (node, graph) => {
                 graph.Node(node, "word", node.ToString().Split('_'));
@@ -177,7 +186,7 @@ namespace graph.network.core.tests
             supers.Add("hero", "is", "good", true);
             supers.Add("villain", "is", "bad", true);
 
-            //create a GraphNet that can do caculations
+            //2: create a GraphNet that can do caculations
             var calc = new GraphNet("calc");
             calc.Add("add_opp", "lable", "+");
             calc.Add(new Node("number"));
@@ -193,7 +202,7 @@ namespace graph.network.core.tests
             calc.Node("sum").AddEdge("input", "number", calc);
             calc.Node("sum").AddEdge("opp", "add_opp", calc);
 
-            //create a GraphNet for parsing text
+            //3: create a GraphNet for parsing text
             var nlp = new GraphNet("nlp");
             nlp.Add(new DynamicNode("nlp_out", (node, graph) => {
                 node.Result = graph.AllEdges();
@@ -211,7 +220,7 @@ namespace graph.network.core.tests
                 Node.BaseOnAdd(node, graph);
             });
 
-            //create the master GraphNet that contains the others as nodes within it
+            //4: create the master GraphNet that contains the others as nodes within it
             //TODO: why are there so many paths???
             var gn = new GraphNet("gn", maxNumberOfPaths: 25);
             gn.RegisterDynamic("ask", (node , graph) => {
