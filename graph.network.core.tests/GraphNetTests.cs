@@ -211,7 +211,6 @@ namespace graph.network.core.tests
             nlp.Add(new DynamicNode("nlp_out", (node, graph) => {
                 node.Result = graph.AllEdges();
             }), true);
-
             nlp.RegisterDynamic("parse", (node, graph) =>
             {
                 //add word nodes and mark if they are numbers
