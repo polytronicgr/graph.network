@@ -9,6 +9,7 @@ namespace graph.network.core
     {
         public NodePath(IEnumerable<Edge> collection)
         {
+            this.Edges = collection;
             Node lastObj = null;
             foreach (var edge in collection)
             {
@@ -62,6 +63,7 @@ namespace graph.network.core
         }
 
         public bool HasLoop { get; private set; }
+        public IEnumerable<Edge> Edges { get; private set; }
 
         public List<Node> GetVertices()
         {

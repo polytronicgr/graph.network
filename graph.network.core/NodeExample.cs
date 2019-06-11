@@ -1,6 +1,6 @@
 ﻿using graph.network.core.nodes;
 
-namespace graph.network.core.tests
+namespace graph.network.core
 {
     public class NodeExample
     {
