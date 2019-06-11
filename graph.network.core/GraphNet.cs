@@ -30,7 +30,11 @@ namespace graph.network.core
 
         public override void OnAdd(GraphNet graph)
         {
-            Edges = AllEdges();
+            if (Edges.Count == 0)
+            {
+                Edges = AllEdges();
+            }
+            
             BaseOnAdd(this, graph);
         }
 

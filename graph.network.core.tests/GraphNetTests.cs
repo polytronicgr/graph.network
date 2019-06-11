@@ -188,6 +188,7 @@ namespace graph.network.core.tests
             supers.AddDynamic("enitiy", "red_king", "is_a", "villain");
             supers.Add("hero", "is", "good", true);
             supers.Add("villain", "is", "bad", true);
+            //supers.Edges = supers.AllEdges().Where(e => e.Predicate.ToString() == "word" || e.Predicate.ToString() == "is").ToList();
 
             //2: create a GraphNet that knows about cities
             var cities = new GraphNet("cities");
@@ -227,8 +228,10 @@ namespace graph.network.core.tests
                 nlp.Node(node, "word", node.ToString().Split(' '));
                 foreach (var word in node.Edges.Select(e => e.Obj).ToList())
                 {
-                    var type = word.ToString().All(char.IsDigit) ? "number" : "word";
-                    word.AddEdge(nlp.Node("a"), nlp.Node( type));
+                    if (word.ToString().All(char.IsDigit))
+                    {
+                        word.AddEdge(nlp.Node("a"), nlp.Node("number"));
+                    }
                 }
                 Node.BaseOnAdd(node, graph);
             });
@@ -251,8 +254,10 @@ namespace graph.network.core.tests
 
             //train the master GraphNet with some examples
             gn.Train(
-                new Example(gn.Node("4 + 1"), 5),
+
                 new Example(gn.Node("spider man"), "good"),
+                new Example(gn.Node("4 + 1"), 5),
+                new Example(gn.Node("10 + 12"), 22),
                 new Example(gn.Node("green goblin"), "bad"),
                 new Example(gn.Node("london is a city"), true),
                 new Example(gn.Node("london is a country"), false),
