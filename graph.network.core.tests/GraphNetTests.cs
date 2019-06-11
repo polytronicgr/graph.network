@@ -103,6 +103,8 @@ namespace graph.network.core.tests
             gn.Add("times_opp", "lable", "x");
             gn.Add("minus_opp", "lable", "-");
             gn.Add(new Node("number"));
+            gn.Add(new Node("a"));
+            gn.Add(new Node("word"));
 
             //and some output nodes that can do maths opperations (add,subtract and multiply)
             //these nodes pull all the numbers from the paths through the graph and apply their operation on them
@@ -147,7 +149,7 @@ namespace graph.network.core.tests
                 var words = node.Value.ToString().Split(' ');
                 gn.Node(node, "word", words);
                 //mark any of those words that are numbers by adding an edge to the number node
-                foreach (var e in node.Edges.Where(e => e.Obj.Value.ToString().All(char.IsDigit)))
+                foreach (var e in node.Edges.Where(e => e.Obj.ToString().All(char.IsDigit)))
                 {
                     e.Obj.AddEdge(gn.Node("a"), gn.Node("number"));
                 }
