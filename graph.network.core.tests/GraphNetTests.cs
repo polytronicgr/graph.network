@@ -9,12 +9,11 @@ namespace graph.network.core.tests
     [TestFixture]
     public class GraphNetTests
     {
-
         //TODO: add UI
-        //TODO: paris is the capital of france and 3 x 5
+        //TODO: paris is the capital of france
         //TODO: A/B testing of nodes (training based on hard coded)
         //TODO: think about issues with add/registering nodes and dependent nodes
-        //TODO: performace test
+        //TODO: performace test + try with large datasets
         //TODO: run through todos
 
         [Test]
@@ -45,7 +44,7 @@ namespace graph.network.core.tests
         public void SimpleQuestionAndAnswer()
         {
             //create a small knowlage graph with information about areas and a couple of true/false output nodes
-            var gn = new GraphNet("gn", maxNumberOfPaths: 10);
+            var gn = new GraphNet("gn", maxNumberOfPaths: 5);
             gn.Add("london", "is_a", "city");
             gn.Add("london", "capital_of", "uk");
             gn.Add("paris", "is_a", "city");
@@ -177,7 +176,7 @@ namespace graph.network.core.tests
             //GraphNets are nodes themselves so they can be added into another GraphNets 
 
             //1: create a GraphNet for predicting if a super is good or bad
-            var supers = new GraphNet("supers");
+            var supers = new GraphNet("supers", maxPathLenght: 10);
             supers.RegisterDynamic("enitiy", (node, graph) => {
                 graph.Node(node, "word", node.ToString().Split('_'));
                 Node.BaseOnAdd(node, graph);
@@ -190,7 +189,7 @@ namespace graph.network.core.tests
             supers.Add("villain", "is", "bad", true);
 
             //2: create a GraphNet that knows about cities
-            var cities = new GraphNet("cities");
+            var cities = new GraphNet("cities", maxNumberOfPaths: 5 );
             cities.Add("london", "is_a", "city");
             cities.Add("paris", "is_a", "city");
             cities.Add("uk", "is_a", "country");
@@ -201,7 +200,7 @@ namespace graph.network.core.tests
             cities.Outputs.Add(cities.Node(false));
 
             //3: create a GraphNet that can do caculations
-            var calc = new GraphNet("calc");
+            var calc = new GraphNet("calc", maxPathLenght: 10);
             calc.Add("add_opp", "lable", "+");
             calc.Add(new Node("number"));
             Func<List<NodePath>, IEnumerable<int>> pullNumbers = (paths) =>
@@ -217,7 +216,7 @@ namespace graph.network.core.tests
             calc.Node("sum").AddEdge("opp", "add_opp", calc);
 
             //4: create a GraphNet for parsing text
-            var nlp = new GraphNet("nlp");
+            var nlp = new GraphNet("nlp", maxNumberOfPaths:5 , maxPathLenght:10);
             nlp.Add(new DynamicNode("nlp_out", (node, graph) => {
                 node.Result = graph.AllEdges();
             }), true);
@@ -236,7 +235,7 @@ namespace graph.network.core.tests
             });
 
             //5: create the master GraphNet that contains the other GraphNets as nodes within it
-            var gn = new GraphNet("gn");
+            var gn = new GraphNet("gn", maxNumberOfPaths: 5, maxPathLenght: 10);
             gn.RegisterDynamic("ask", (node , graph) => {
                 Node ask = nlp.DynamicNode("parse")(node.Value.ToString());
                 //TODO: this would be better: node.AddEdge(graph.Node("nlp"), ask);
