@@ -21,6 +21,7 @@ namespace graph.network.core
 
         public Dictionary<object, Node> NodeIndex { get; set; } = new Dictionary<object, Node>();
         public string DefaultInput { get; set; }
+        public bool LimitNumberOfPaths { get;  set; }
 
         public GraphNet(string name, int maxPathLenght = 20, int maxNumberOfPaths = 10) : base(name)
         {
@@ -276,7 +277,11 @@ namespace graph.network.core
                 Remove(output);
             }
 
-    
+            //TODO: check that this trim is safe
+            if (results.Count > maxNumberOfPaths && LimitNumberOfPaths)
+            {
+                results = results.OrderBy(p => p.Count).Take(maxNumberOfPaths - 1).ToList();
+            }
             return results;
         }
         

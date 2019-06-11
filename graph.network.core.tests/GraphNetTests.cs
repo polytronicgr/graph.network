@@ -9,13 +9,13 @@ namespace graph.network.core.tests
     [TestFixture]
     public class GraphNetTests
     {
-        //TODO: run through todos
+
         //TODO: add UI
         //TODO: paris is the capital of france and 3 x 5
         //TODO: A/B testing of nodes (training based on hard coded)
-        //TODO: think about issues with add/registering nodes 
-        //TODO: review calculator and try to simplify it again
+        //TODO: think about issues with add/registering nodes and dependent nodes
         //TODO: performace test
+        //TODO: run through todos
 
         [Test]
         public void SuperHeros()
@@ -188,7 +188,6 @@ namespace graph.network.core.tests
             supers.AddDynamic("enitiy", "red_king", "is_a", "villain");
             supers.Add("hero", "is", "good", true);
             supers.Add("villain", "is", "bad", true);
-            //supers.Edges = supers.AllEdges().Where(e => e.Predicate.ToString() == "word" || e.Predicate.ToString() == "is").ToList();
 
             //2: create a GraphNet that knows about cities
             var cities = new GraphNet("cities");
@@ -237,8 +236,7 @@ namespace graph.network.core.tests
             });
 
             //5: create the master GraphNet that contains the other GraphNets as nodes within it
-            //TODO: why are there so many paths???
-            var gn = new GraphNet("gn", maxNumberOfPaths: 25);
+            var gn = new GraphNet("gn");
             gn.RegisterDynamic("ask", (node , graph) => {
                 Node ask = nlp.DynamicNode("parse")(node.Value.ToString());
                 //TODO: this would be better: node.AddEdge(graph.Node("nlp"), ask);
@@ -251,6 +249,7 @@ namespace graph.network.core.tests
             gn.Add(supers, true);
             gn.Add(cities, true);
             gn.Add(calc, true);
+            gn.LimitNumberOfPaths = true;
 
             //train the master GraphNet with some examples
             gn.Train(
