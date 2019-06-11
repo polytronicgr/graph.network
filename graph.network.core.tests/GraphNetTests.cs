@@ -174,7 +174,7 @@ namespace graph.network.core.tests
         [Test]
         public void TestNestedGraphNets()
         {
-            //GraphNets are nodes themselves so they can be added into another GraphNet 
+            //GraphNets are nodes themselves so they can be added into another GraphNets 
 
             //1: create a GraphNet for predicting if a super is good or bad
             var supers = new GraphNet("supers");
