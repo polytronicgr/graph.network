@@ -185,23 +185,6 @@ namespace graph.network.core
                 {
                     var nodeExample = new NodeExample(inputNode, ouputNode);
                     var paths = GetPaths(nodeExample);
-
-                  
-                    /*
-                    //TODO: ****** if the ouput is a GraphNet how does it get its result set to be its prediction for this???????????? this is very messy!!
-                    if (ouputNode is GraphNet)
-                    {
-                        var result = ((GraphNet)ouputNode).Predict(inputNode);
-                        if (result == example.Output)
-                        {
-                            //net.AddToTraining(paths, ouputNode);
-                            //ouputNode.Result = result;
-                        }
-                        
-                    }
-                 */
-                   
-                    
                     if (paths != null && paths.Count != 0 && ouputNode.Result != null && ouputNode.Result.Equals(example.Output)   ) //TODO: what about learning and getting closer
                     {
                         net.AddToTraining(paths, ouputNode);
