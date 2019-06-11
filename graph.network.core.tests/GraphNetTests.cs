@@ -91,18 +91,48 @@ namespace graph.network.core.tests
         [Test]
         public void Calculator()
         {
-            //small graph of operators
-            var gn = new GraphNet("gn", maxNumberOfPaths: 10);
-            gn.Add(gn.Node("number"));
-            gn.Add("+", "a", "operand");
-            gn.Add("-", "a", "operand");
-            gn.Add("*", "a", "operand");
-            gn.Add("x", "same_as", "*");
+            //create small graph of operators
+            var gn = new GraphNet("calc");
+            gn.Add("add_opp", "lable", "+");
+            gn.Add("times_opp", "lable", "*");
+            gn.Add("times_opp", "lable", "x");
+            gn.Add("minus_opp", "lable", "-");
+            gn.Add(new Node("number"));
 
-            //to run the calculations we will need:
+            //and some output nodes that can do maths opperations (add,subtract and multiply)
+            //these nodes pull all the numbers from the paths through the graph and apply their operation on them
+            Func<List<NodePath>, IEnumerable<int>> pullNumbers = (paths) =>
+            {
+                var numbers = paths.Where(p => p[0].Value.ToString().All(char.IsDigit) && p[2].Equals(gn.Node("number")))
+                            .Select(p => int.Parse(p[0].Value.ToString()));
+                return numbers;
+            };
+            gn.Add(new DynamicNode("sum"
+                , onProcess: (node, graph, input, paths) => node.Result = pullNumbers(paths).Sum())
+                , true);
+            gn.Node("sum").AddEdge("input", "number", gn);
+            gn.Node("sum").AddEdge("opp", "add_opp", gn);
 
-            //(1) a NLP the input with numbers marked
-            Action<Node, GraphNet> tokeniser = (node, graph) =>
+            gn.Add(new DynamicNode("times"
+                , onProcess: (node, graph, input, paths) => node.Result = pullNumbers(paths).Aggregate(1, (acc, val) => acc * val))
+                , true);
+            gn.Node("times").AddEdge("input", "number", gn);
+            gn.Node("times").AddEdge("opp", "times_opp", gn);
+
+            gn.Add(new DynamicNode("minus"
+            , onProcess: (node, graph, input, paths) => {
+                var n = pullNumbers(paths);
+                if (n.Count() > 0)
+                {
+                    node.Result = n.Aggregate((a, b) => a - b);
+                }
+            })
+            , true);
+            gn.Node("minus").AddEdge("input", "number", gn);
+            gn.Node("minus").AddEdge("opp", "minus_opp", gn);
+
+            //then we register a tokeniser that adds the word nodes and marks any numbers
+            gn.RegisterDynamic("parse", (node, graph) =>
             {
                 //add nodes for words
                 var words = node.Value.ToString().Split(' ');
@@ -114,119 +144,42 @@ namespace graph.network.core.tests
                 }
 
                 Node.BaseOnAdd(node, graph);
-            };
-
-            //(2) some output nodes that will be able to do the maths. 
-            //Note they store the restuls in the Result property of the node
-            Action<Node, GraphNet, Node, List<NodePath>> calculate = (node, graph, input, paths) =>
-            {
-                //get the x and y edges and their results
-                var x1 = node.GetEdgeByPredicate("param1").Obj;
-                var x = (decimal?)node.GetEdgeByPredicate("param1").Obj.Result;
-                var y = (decimal?)node.GetEdgeByPredicate("param2").Obj.Result;
-                //if they do not have numser then this node is not valid
-                if (x == null || y == null)
-                {
-                    paths.Clear(); // none of these paths is valid
-                }
-                //otherwise do the maths and store the result
-                else if (node.Value.ToString() == "add")
-                {
-                    node.Result = x + y;
-                }
-                else if (node.Value.ToString() == "minus")
-                {
-                    node.Result = x - y;
-                }
-                else if (node.Value.ToString() == "times")
-                {
-                    node.Result = x * y;
-                }
-            };
-
-            //(3) some special nodes for the params that are only valid if they start with numbers ...
-            Func<Node, GraphNet, NodePath, bool> isNumber = (node, graph, path) =>
-            {
-                return Node.BaseIsPathValid(node, graph, path) && path[0].Value.ToString().All(char.IsDigit);
-            };
-
-            //... and they can pull those numbers out and store them in the nodes result
-            Action<Node, GraphNet, Node, List<NodePath>> extractNumber = (node, graph, input, paths) =>
-            {
-                //get any paths that end in this node whose input has not been used by another node
-                var firstPathToThisNode = paths.Where(p=> p[p.Count-1]==node && !p[0].GetProp<bool>("used")).FirstOrDefault(); 
-                if (firstPathToThisNode != null)
-                {
-                    //take the unput number and mark it as used
-                    var start = firstPathToThisNode[0];
-                    node.Result = decimal.Parse(start.Value.ToString());
-                    start.SetProp("used", true);
-                }
-            };
-
-            //add these complex ouput nodes
-            var add = new DynamicNode("add", onProcess: calculate);
-            add.AddEdge("param1", new DynamicNode("add_x", isPathValid: isNumber, onProcess: extractNumber), gn).AddEdge("must_be", "number", gn);
-            add.AddEdge("param2", new DynamicNode("add_y", isPathValid: isNumber, onProcess: extractNumber), gn).AddEdge("must_be", "number", gn);
-            add.AddEdge("opp", "+", gn);
-            gn.Add(add, true);
-
-            var minus = new DynamicNode("minus", onProcess: calculate);
-            minus.AddEdge("param1", new DynamicNode("minus_x", isPathValid: isNumber, onProcess: extractNumber), gn).AddEdge("must_be", "number", gn);
-            minus.AddEdge("param2", new DynamicNode("minus_y", isPathValid: isNumber, onProcess: extractNumber), gn).AddEdge("must_be", "number", gn);
-            minus.AddEdge("opp", "-", gn);
-            gn.Add(minus, true);
-
-            var times = new DynamicNode("times", onProcess: calculate);
-            times.AddEdge("param1", new DynamicNode("times_x", isPathValid: isNumber, onProcess: extractNumber), gn).AddEdge("must_be", "number", gn);
-            times.AddEdge("param2", new DynamicNode("times_y", isPathValid: isNumber, onProcess: extractNumber), gn).AddEdge("must_be", "number", gn);
-            times.AddEdge("opp", "*", gn);
-            gn.Add(times, true);
+            });
 
             //teach it the basic math funcitons
             gn.Train(
-                      new NodeExample(new DynamicNode("1 + 2", tokeniser), add)
-                    , new NodeExample(new DynamicNode("1 - 2", tokeniser), minus)
-                    , new NodeExample(new DynamicNode("1 * 2", tokeniser), times)
-                    //, new Example(new DynamicNode("1 x 2", tokeniser), times)
+                      new NodeExample(gn.DynamicNode("parse")("1 + 2"), gn.Node("sum"))
+                    , new NodeExample(gn.DynamicNode("parse")("1 - 2"), gn.Node("minus"))
+                    , new NodeExample(gn.DynamicNode("parse")("1 * 2"), gn.Node("times"))
             );
 
             //test
-            Assert.AreEqual(15, gn.Predict(new DynamicNode("5 + 10", tokeniser)));
-            Assert.AreEqual(2, gn.Predict(new DynamicNode("5 - 3", tokeniser)));
-            Assert.AreEqual(4, gn.Predict(new DynamicNode("what is 5 - 1", tokeniser)));
-            Assert.AreEqual(21, gn.Predict(new DynamicNode("3 * 7", tokeniser)));
-            //Assert.AreEqual(15, gn.Predict(new DynamicNode("3 x 5", tokeniser)).Result);
+            Assert.AreEqual(15, gn.Predict(gn.DynamicNode("parse")("5 + 10")));
+            Assert.AreEqual(2, gn.Predict(gn.DynamicNode("parse")("5 - 3")));
+            Assert.AreEqual(4, gn.Predict(gn.DynamicNode("parse")("what is 5 - 1")));
+            Assert.AreEqual(21, gn.Predict(gn.DynamicNode("parse")("3 * 7")));
+            Assert.AreEqual(15, gn.Predict(gn.DynamicNode("parse")("3 x 5")));
         }
 
         [Test]
         public void TestNestedGraphNets()
         {
-            //=================================================================
             //create a GraphNet for predicting if a super is good or bad
-            //=================================================================
             var supers = new GraphNet("supers");
             supers.RegisterDynamic("enitiy", (node, graph) => {
-                var words = node.Value.ToString().Split('_');
-                graph.Node(node, "word", words);
-                node.AddEdge("entity_name", graph.Node(node.Value.ToString().Replace("_", " ")), graph);
+                graph.Node(node, "word", node.ToString().Split('_'));
                 Node.BaseOnAdd(node, graph);
             });
-            supers.AddDynamic("enitiy", "spider_man", "is_a", "super_hero");
-            supers.AddDynamic("enitiy", "hulk", "is_a", "super_hero");
-            supers.AddDynamic("enitiy", "green_goblin", "is_a", "super_villain");
-            supers.AddDynamic("enitiy", "red_king", "is_a", "super_villain");
-            supers.AddDynamic("enitiy", "donald_trump", "is_a", "super_villain");
-            supers.Add("super_hero", "is", "good", true);
-            supers.Add("super_villain", "is", "bad", true);
+            supers.AddDynamic("enitiy", "spider_man", "is_a", "hero");
+            supers.AddDynamic("enitiy", "hulk", "is_a", "hero");
+            supers.AddDynamic("enitiy", "green_goblin", "is_a", "villain");
+            supers.AddDynamic("enitiy", "red_king", "is_a", "villain");
+            supers.Add("hero", "is", "good", true);
+            supers.Add("villain", "is", "bad", true);
 
-            //=================================================================
-            //create another GN that can do simple caculations
-            //=================================================================
+            //create a GraphNet that can do caculations
             var calc = new GraphNet("calc");
             calc.Add("add_opp", "lable", "+");
-            calc.Add("times_opp", "lable", "*");
-            calc.Add("minus_opp", "lable", "-");
             calc.Add(new Node("number"));
             Func<List<NodePath>, IEnumerable<int>> pullNumbers = (paths) =>
             {
@@ -240,51 +193,29 @@ namespace graph.network.core.tests
             calc.Node("sum").AddEdge("input", "number", calc);
             calc.Node("sum").AddEdge("opp", "add_opp", calc);
 
-            calc.Add(new DynamicNode("times"
-                , onProcess: (node, graph, input, paths) => node.Result = pullNumbers(paths).Aggregate(1, (acc, val) => acc * val))
-                , true);
-            calc.Node("times").AddEdge("input", "number", calc);
-            calc.Node("times").AddEdge("opp", "times_opp", calc);
-
-            calc.Add(new DynamicNode("minus"
-            , onProcess: (node, graph, input, paths) => {
-                var n = pullNumbers(paths);
-                if (n.Count() > 0) {
-                    node.Result = n.Aggregate((a, b) => a - b);
-                }
-            })
-            , true);
-            calc.Node("minus").AddEdge("input", "number", calc);
-            calc.Node("minus").AddEdge("opp", "minus_opp", calc);
-
-            //=================================================================
-            //create a simple NLP GN for parsing text
-            //=================================================================
+            //create a GraphNet for parsing text
             var nlp = new GraphNet("nlp");
             nlp.Add(new DynamicNode("nlp_out", (node, graph) => {
                 node.Result = graph.AllEdges();
             }), true);
 
-            nlp.RegisterDynamic("text", (node, graph) =>
+            nlp.RegisterDynamic("parse", (node, graph) =>
             {
-                //add nodes for each word
-                var words = node.Value.ToString().Split(' ');
-                nlp.Node(node, "word", words);
-                //mark any of those words that are numbers by adding an edge to the number node
-                foreach (var e in node.Edges.Where(e => e.Obj.Value.ToString().All(char.IsDigit)))
+                //add word nodes and mark if they are numbers
+                nlp.Node(node, "word", node.ToString().Split(' '));
+                foreach (var word in node.Edges.Select(e => e.Obj).ToList())
                 {
-                    e.Obj.AddEdge(nlp.Node("a"), nlp.Node("number"));
+                    var type = word.ToString().All(char.IsDigit) ? "number" : "word";
+                    word.AddEdge(nlp.Node("a"), nlp.Node( type));
                 }
-
                 Node.BaseOnAdd(node, graph);
             });
-            //=================================================================
-            //now we create the master GraphNet and add these sub ones to it
-            //=================================================================
+
+            //create the master GraphNet that contains the others as nodes within it
             //TODO: why are there so many paths???
-            var gn = new GraphNet("gn", maxNumberOfPaths: 40);
+            var gn = new GraphNet("gn", maxNumberOfPaths: 25);
             gn.RegisterDynamic("ask", (node , graph) => {
-                Node ask = nlp.DynamicNode("text")(node.Value.ToString());
+                Node ask = nlp.DynamicNode("parse")(node.Value.ToString());
                 //TODO: this would be better: node.AddEdge(graph.Node("nlp"), ask);
                 nlp.Add(ask);
                 node.Edges = nlp.AllEdges();
@@ -295,21 +226,19 @@ namespace graph.network.core.tests
             gn.Add(supers, true);
             gn.Add(calc, true);
 
-            //we train it with some examples
+            //train the master GraphNet with some examples
             gn.Train(
-                  new Example(gn.Node("2 * 3"), 6) 
-                , new Example(gn.Node("4 + 1"), 5)
-                , new Example(gn.Node("6 - 5"), 1)
+                  new Example(gn.Node("4 + 1"), 5)
                 , new Example(gn.Node("spider man"), "good")
                 , new Example(gn.Node("green goblin"), "bad")
             );
 
-            //and then this one net can aswer both typoes of question
+            //this master GraphNet can parse text and answer different types of questions:
             Assert.AreEqual("good", gn.Predict("hulk"));
             Assert.AreEqual("bad", gn.Predict("red king"));
             Assert.AreEqual(17, gn.Predict("5 + 12"));
-            Assert.AreEqual(60, gn.Predict("5 * 12"));
-            Assert.AreEqual(1, gn.Predict("what is 10 - 9"));
+            Assert.AreEqual(27, gn.Predict("7 + 20"));
+            //TODO: Assert.AreEqual(27, gn.Predict("7 + 7"));
         }
 
         [Test]
