@@ -9,6 +9,12 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <TextBox x:Name="inputText" Grid.Row="0" Text="{Binding Path=Input}" KeyDown="OnKeyDownHandler"/>
+
         <zoom:ZoomControl  Grid.Row="1"  Zoom="0.2" ZoomBoxOpacity="0.5" Background="#ff656565">
             <local:PocGraphLayout x:Name="graphLayout" Margin="10"
                 Graph="{Binding Path=Graph}"
