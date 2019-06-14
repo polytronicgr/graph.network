@@ -283,7 +283,9 @@ namespace graph.network.core
             }
             return results;
         }
-        
+
+        public override bool IsGraphNet => true;
+
         private void AddPath(Node inputInterfaceNode, Node outputInterfaceNode, Node masterInputNode, List<NodePath> paths)
         {
             //TOD: think about this - it can happen if you have an orphend edge 

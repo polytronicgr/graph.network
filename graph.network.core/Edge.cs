@@ -17,6 +17,11 @@ namespace graph.network.core
         public Node Obj { get; }
         public bool Internal { get; set; }
 
+        public string ShortId
+        {
+            get { return Predicate?.ShortId; }
+        }
+
 
         public override bool Equals(object obj)
         {

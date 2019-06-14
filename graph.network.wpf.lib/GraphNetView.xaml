@@ -4,11 +4,54 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:graph.network.wpf.lib"
+             xmlns:gn="clr-namespace:graph.network.core.nodes;assembly=graph.network.core"
              xmlns:zoom="clr-namespace:WPFExtensions.Controls;assembly=WPFExtensions"
              xmlns:graphsharp="clr-namespace:GraphSharp.Controls;assembly=GraphSharp.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
+        <Grid.Resources>
+            <DataTemplate x:Key="nodeTemplate" DataType="{x:Type gn:Node}">
+                <StackPanel Orientation="Horizontal" Margin="5" MouseDown="OnNodeDoubleClick">
+                    <TextBlock x:Name="text" Text="{Binding Path=ShortId, Mode=OneWay}" Foreground="White" />
+                </StackPanel>
+                <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding IsGraphNet}" Value="true">
+                        <Setter TargetName="text" Property="TextDecorations" Value="Underline" />
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+
+            <Style TargetType="{x:Type graphsharp:VertexControl}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type graphsharp:VertexControl}">
+                            <Border BorderBrush="White" 
+                                    Background="Black"
+                                    BorderThickness="2"
+                                    CornerRadius="10,10,10,10"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter Content="{TemplateBinding Vertex}" ContentTemplate="{StaticResource nodeTemplate}"/>
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="2" Color="LightGray"  Opacity="0.3" Direction="315"/>
+                                </Border.Effect>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style TargetType="{x:Type graphsharp:EdgeControl}">
+                <Style.Resources>
+                    <ToolTip x:Key="ToolTipContent">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Path=ShortId, Mode=OneWay}"/>
+                        </StackPanel>
+                    </ToolTip>
+                </Style.Resources>
+                <Setter Property="ToolTip" Value="{StaticResource ToolTipContent}"/>
+            </Style>
+        </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>

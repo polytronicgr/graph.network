@@ -54,6 +54,8 @@ namespace graph.network.core.nodes
             BaseOnRemove(this, graph);
         }
 
+        public virtual bool IsGraphNet => false;
+
         public static void BaseOnRemove(Node node, GraphNet graph)
         {
             foreach (var e in node.Edges)
@@ -125,6 +127,11 @@ namespace graph.network.core.nodes
         public override string ToString()
         {
             return Value?.ToString();
+        }
+
+        public virtual string ShortId
+        {
+            get { return ToString(); }
         }
 
         

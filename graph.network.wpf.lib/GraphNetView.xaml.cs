@@ -4,6 +4,7 @@ using QuickGraph;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -168,6 +169,21 @@ namespace graph.network.wpf.lib
                     Graph.AddVerticesAndEdge(new Edge(result.Output, gn.Node("result"), new Node(result.Output.Result)));
                 }
                 graphLayout.Graph = Graph;
+            }
+        }
+
+        private void OnNodeDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 1) return;
+            var conrol = sender as StackPanel;
+            var node = conrol?.DataContext as Node;
+            if (node != null && node.IsGraphNet)
+            {
+                var graphNet = (GraphNet)node;
+                var g = new BidirectionalGraph<Node, Edge>();
+                //TODO: need to find a way of just gettin paths from the inputs (need to think about this)
+                g.AddVerticesAndEdgeRange(graphNet.AllEdges());
+                graphLayout.Graph = g;
             }
         }
 
