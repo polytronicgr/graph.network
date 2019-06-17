@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace graph.network.core.nodes
+namespace graph.network.core
 {
     public class Node
     {
         Dictionary<string, object> properties = new Dictionary<string, object>();
- 
+
         public Node(object value)
         {
             Value = value;
@@ -30,7 +30,7 @@ namespace graph.network.core.nodes
         public static void BaseOnAdd(Node node, GraphNet graph)
         {
             //NOTE: is this OK to just clear these (think about multi nested GraphNets)
-            node.DependentNodes.Clear(); 
+            node.DependentNodes.Clear();
             node.Edges.ForEach(e =>
             {
                 if (e.Obj != node && !graph.ContainsNode(e.Obj))
@@ -76,10 +76,10 @@ namespace graph.network.core.nodes
             return BaseIsPathValid(this, graph, path);
         }
 
-        public static bool BaseIsPathValid(Node node,  GraphNet graph, NodePath path)
+        public static bool BaseIsPathValid(Node node, GraphNet graph, NodePath path)
         {
             if (path.HasLoop) return false;
-            var passesThroughAnOutputOrThisNode = path.Skip(1).Take(path.Count - 2).Any(n => n.Equals(node) || graph.Outputs.Contains(n) );
+            var passesThroughAnOutputOrThisNode = path.Skip(1).Take(path.Count - 2).Any(n => n.Equals(node) || graph.Outputs.Contains(n));
             return !passesThroughAnOutputOrThisNode;
         }
 
@@ -134,7 +134,7 @@ namespace graph.network.core.nodes
             get { return ToString(); }
         }
 
-        
+
         public override bool Equals(object obj)
         {
             if (Value == null && obj != null) return false;
@@ -151,7 +151,7 @@ namespace graph.network.core.nodes
         {
             return Value.GetHashCode();
         }
-       
+
 
         public Edge GetEdgeByPredicate(object value)
         {

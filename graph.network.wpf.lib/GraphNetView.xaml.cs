@@ -1,5 +1,4 @@
 ﻿using graph.network.core;
-using graph.network.core.nodes;
 using QuickGraph;
 using System;
 using System.Collections.Generic;

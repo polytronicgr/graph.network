@@ -1,6 +1,4 @@
-﻿using graph.network.core.nodes;
-
-namespace graph.network.core
+﻿namespace graph.network.core
 {
     public class NodeExample
     {

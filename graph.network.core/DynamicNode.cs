@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace graph.network.core.nodes
+namespace graph.network.core
 {
     public class DynamicNode : Node
     {
         private readonly Action<Node, GraphNet> onAdd;
         private readonly Action<Node, GraphNet> onRemove;
-        private readonly Action<Node, GraphNet, Node,List<NodePath>> onProcess;
-        private readonly Func<Node, GraphNet,NodePath, bool> isPathValid;
+        private readonly Action<Node, GraphNet, Node, List<NodePath>> onProcess;
+        private readonly Func<Node, GraphNet, NodePath, bool> isPathValid;
 
         public DynamicNode(
-            object value, Action<Node, GraphNet> onAdd =null
+            object value, Action<Node, GraphNet> onAdd = null
             , Action<Node, GraphNet> onRemove = null
             , Action<Node, GraphNet, Node, List<NodePath>> onProcess = null
-            ,Func<Node, GraphNet, NodePath, bool> isPathValid = null) : base(value)
+            , Func<Node, GraphNet, NodePath, bool> isPathValid = null) : base(value)
         {
             this.onAdd = onAdd;
             this.onRemove = onRemove;
@@ -31,12 +31,12 @@ namespace graph.network.core.nodes
             else
             {
                 onAdd(this, graph);
-            }  
+            }
         }
 
         public override void OnRemove(GraphNet graph)
         {
-            if (onRemove== null)
+            if (onRemove == null)
             {
                 base.OnRemove(graph);
             }
@@ -50,7 +50,7 @@ namespace graph.network.core.nodes
         {
             if (onProcess == null)
             {
-                base.OnProcess(graph, input , paths);
+                base.OnProcess(graph, input, paths);
             }
             else
             {

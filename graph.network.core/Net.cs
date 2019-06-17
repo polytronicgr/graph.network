@@ -3,7 +3,6 @@ using ConvNetSharp.Core.Layers.Double;
 using ConvNetSharp.Core.Training;
 using ConvNetSharp.Volume;
 using ConvNetSharp.Volume.Double;
-using graph.network.core.nodes;
 using System;
 using System.Collections.Generic;
 using System.Linq;

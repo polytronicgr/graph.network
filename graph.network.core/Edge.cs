@@ -1,5 +1,4 @@
-﻿using graph.network.core.nodes;
-using QuickGraph;
+﻿using QuickGraph;
 
 namespace graph.network.core
 {

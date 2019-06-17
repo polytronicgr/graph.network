@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:graph.network.wpf.lib"
-             xmlns:gn="clr-namespace:graph.network.core.nodes;assembly=graph.network.core"
+             xmlns:gn="clr-namespace:graph.network.core;assembly=graph.network.core"
              xmlns:zoom="clr-namespace:WPFExtensions.Controls;assembly=WPFExtensions"
              xmlns:graphsharp="clr-namespace:GraphSharp.Controls;assembly=GraphSharp.Controls"
              mc:Ignorable="d" 
