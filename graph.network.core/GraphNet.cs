@@ -70,7 +70,7 @@ namespace graph.network.core
             }
             else
             {
-                var node = new Node(subject);
+                var node = NewNode(subject);
                 foreach (var obj in objs)
                 {
                     node.AddEdge(Node(predicate), Node(obj));
@@ -80,13 +80,29 @@ namespace graph.network.core
             }
         }
         
-        public Node Node(object value)
+        public virtual Node Node(object value)
         {
-            if(NodeIndex.ContainsKey(value))  return NodeIndex[value];
+            if (NodeIndex.ContainsKey(value)) return NodeIndex[value];
 
-            var node = DefaultInput == null ? new Node(value) : DynamicNode(DefaultInput)(value);
+            var node = DefaultInput == null ? NewNode(value) : DynamicNode(DefaultInput)(value);
             NodeIndex[node.Value] = node;
             return node;
+        }
+
+        protected virtual Node NewNode(object value)
+        {
+            return new Node(value);
+        }
+
+        public List<Result> GetExamples(Result result)
+        {
+            if (result == null) return new List<Result>(); 
+            var data = net.GetTraingData(result.Output);
+            var withInput = data.Where(d => d[0][0].Value == result.Input.Value)
+                .Select(p => new Result(result.Input, result.Output, p, result.Probabilty))
+                .ToList();
+            withInput.Insert(0,new Result(result.Input, result.Output, null, result.Probabilty));
+            return withInput;
         }
 
         public NodeExample NewExample(string input, string output)
@@ -184,7 +200,7 @@ namespace graph.network.core
             foreach (Example example in examples)
             {
                 var inputNode = example.Input as Node; //TODO: what if the input is not a node
-                foreach (var ouputNode in Outputs)
+                foreach (var ouputNode in Outputs.ToList())
                 {
                     var nodeExample = new NodeExample(inputNode, ouputNode);
                     var paths = GetPaths(nodeExample);
@@ -346,6 +362,7 @@ namespace graph.network.core
         public object Predict(Node input)
         {
             List<Result> results = Rank(input);
+            if (results.Count == 0) return null;
             return results[0].Output.Result;
         }
 
@@ -359,7 +376,8 @@ namespace graph.network.core
         public List<Result> Rank(Node input)
         {
             var results = new List<Result>();
-            Outputs.ForEach(ouput => AddResult(input, ouput, results));
+            if (input == null) return results;
+            Outputs.ToList().ForEach(ouput => AddResult(input, ouput, results));
             results.Sort((r1, r2) => r2.Probabilty.CompareTo(r1.Probabilty));
             return results;
         }
@@ -371,6 +389,7 @@ namespace graph.network.core
             {
                 net = new Net(GetNodeIndex(), Outputs, maxPathLenght, maxNumberOfPaths);
             }
+
             var probabilty = net.GetProbabilty(paths, ouput);
             var result = new Result(input, ouput, paths, probabilty);
             results.Add(result);

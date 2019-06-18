@@ -48,9 +48,9 @@ namespace graph.network.core
             var sb = new StringBuilder();
             foreach (var item in this)
             {
-                sb.Append($">{item.Value}");
+                sb.Append($">{item.ShortId}");
             }
-            return sb.ToString();
+            return sb.ToString().TrimStart('>');
         }
 
         private void MarkLooped(Node node)

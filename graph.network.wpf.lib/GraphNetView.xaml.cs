@@ -2,6 +2,8 @@
 using QuickGraph;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,143 +11,30 @@ using System.Windows.Input;
 
 namespace graph.network.wpf.lib
 {
-    public class PocGraphLayout : GraphSharp.Controls.GraphLayout<Node, Edge, BidirectionalGraph<Node, Edge>> { };
-    /// <summary>
-    /// Interaction logic for GraphNetView.xaml
-    /// </summary>
-    public partial class GraphNetView : UserControl
+    public class GraphNetViewModel : INotifyPropertyChanged
     {
-        private GraphNet gn;
+        public event PropertyChangedEventHandler PropertyChanged;
         private string _input;
+        private GraphNet net;
+        private Node _output;
+        private List<Result> results;
 
-        public GraphNetView()
+        public BidirectionalGraph<Node, Edge> Graph { get; private set; } = new BidirectionalGraph<Node, Edge>();
+        public ObservableCollection<Node> Outputs { get; private set; }
+
+        public List<Result> Examples { get; private set; }
+
+        public GraphNet Net
         {
-            InitializeComponent();
-
-            //1: create a GraphNet for predicting if a super is good or bad
-            var supers = new GraphNet("supers", maxPathLenght: 10);
-            supers.RegisterDynamic("enitiy", (node, graph) => {
-                graph.Node(node, "word", node.ToString().Split('_'));
-                Node.BaseOnAdd(node, graph);
-            });
-            supers.AddDynamic("enitiy", "spider_man", "is_a", "hero");
-            supers.AddDynamic("enitiy", "hulk", "is_a", "hero");
-            supers.AddDynamic("enitiy", "green_goblin", "is_a", "villain");
-            supers.AddDynamic("enitiy", "red_king", "is_a", "villain");
-            supers.Add("hero", "is", "good", true);
-            supers.Add("villain", "is", "bad", true);
-
-            //2: create a GraphNet that knows about cities
-            var cities = new GraphNet("cities", maxNumberOfPaths: 5);
-            cities.Add("london", "is_a", "city");
-            cities.Add("paris", "is_a", "city");
-            cities.Add("uk", "is_a", "country");
-            cities.Add("france", "is_a", "country");
-            cities.Add(cities.Node(cities.Node(true), "input", "country", "city"));
-            cities.Add(cities.Node(cities.Node(false), "input", "country", "city"));
-            cities.Outputs.Add(cities.Node(true));
-            cities.Outputs.Add(cities.Node(false));
-
-            //3: create a GraphNet that can do caculations
-            var calc = new GraphNet("calc", maxPathLenght: 10);
-            calc.Add("add_opp", "lable", "+");
-            calc.Add("times_opp", "lable", "*");
-            calc.Add("times_opp", "lable", "x");
-            calc.Add("minus_opp", "lable", "-");
-            calc.Add(new Node("number"));
-            calc.Add(new Node("a"));
-            calc.Add(new Node("word"));
-
-            Func<List<NodePath>, IEnumerable<int>> pullNumbers = (paths) =>
+            get => net;
+            set
             {
-                var numbers = paths.Where(p => p[0].Value.ToString() != "" && p[0].Value.ToString().All(char.IsDigit) && p[2].Equals(calc.Node("number")))
-                            .Select(p => int.Parse(p[0].Value.ToString()));
-                return numbers;
-            };
-            calc.Add(new DynamicNode("sum"
-                , onProcess: (node, graph, input, paths) => node.Result = pullNumbers(paths).Sum())
-                , true);
-            calc.Node("sum").AddEdge("input", "number", calc);
-            calc.Node("sum").AddEdge("opp", "add_opp", calc);
-
-            //subtract
-            calc.Add(new DynamicNode("minus"
-            , onProcess: (node, graph, input, paths) => {
-                var n = pullNumbers(paths);
-                if (n.Count() > 0)
-                {
-                    node.Result = n.Aggregate((a, b) => a - b);
-                }
-            })
-            , true);
-            calc.Node("minus").AddEdge("input", "number", calc);
-            calc.Node("minus").AddEdge("opp", "minus_opp", calc);
-
-            //multiply
-            calc.Add(new DynamicNode("times"
-                , onProcess: (node, graph, input, paths) => node.Result = pullNumbers(paths).Aggregate(1, (acc, val) => acc * val))
-                , true);
-            calc.Node("times").AddEdge("input", "number", calc);
-            calc.Node("times").AddEdge("opp", "times_opp", calc);
-
-            //4: create a GraphNet for parsing text
-            var nlp = new GraphNet("nlp", maxNumberOfPaths: 5, maxPathLenght: 10);
-            nlp.Add(new DynamicNode("nlp_out", (node, graph) => {
-                node.Result = graph.AllEdges();
-            }), true);
-            nlp.RegisterDynamic("parse", (node, graph) =>
-            {
-                //add word nodes and mark if they are numbers
-                nlp.Node(node, "word", node.ToString().Split(' '));
-                foreach (var word in node.Edges.Select(e => e.Obj).ToList())
-                {
-                    if (word.ToString().All(char.IsDigit))
-                    {
-                        word.AddEdge(nlp.Node("a"), nlp.Node("number"));
-                    }
-                }
-                Node.BaseOnAdd(node, graph);
-            });
-
-            //5: create the master GraphNet that contains the other GraphNets as nodes within it
-            gn = new GraphNet("gn", maxNumberOfPaths: 5, maxPathLenght: 10);
-            gn.RegisterDynamic("ask", (node, graph) => {
-                Node ask = nlp.DynamicNode("parse")(node.Value.ToString());
-                //TODO: this would be better: node.AddEdge(graph.Node("nlp"), ask);
-                nlp.Add(ask);
-                node.Edges = nlp.AllEdges();
-                nlp.Remove(ask);
-                Node.BaseOnAdd(node, graph);
-            });
-            gn.DefaultInput = "ask";
-            gn.Add(supers, true);
-            gn.Add(cities, true);
-            gn.Add(calc, true);
-            gn.LimitNumberOfPaths = true;
-
-            //train the master GraphNet with some examples
-            gn.Train(
-
-                new Example(gn.Node("spider man"), "good"),
-                new Example(gn.Node("4 + 1"), 5),
-                new Example(gn.Node("12 - 10"), 2),
-                new Example(gn.Node("5 * 3"), 15),
-                new Example(gn.Node("green goblin"), "bad"),
-                new Example(gn.Node("london is a city"), true),
-                new Example(gn.Node("london is a country"), false),
-                new Example(gn.Node("uk is a country"), true),
-                new Example(gn.Node("uk is a city"), false)
-            );
-
-            graphLayout.DataContext = this;
-        }
-
-        private void OnKeyDownHandler(object sender, KeyEventArgs e)
-        {
-
-            if (e.Key == Key.Enter)
-            {
-                Input = inputText.Text;
+                net = value;
+                Graph = new BidirectionalGraph<Node, Edge>();
+                Graph.AddVerticesAndEdgeRange(net.AllEdges());
+                Outputs = new ObservableCollection<Node>(net.Outputs);
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(Graph)));
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(Outputs)));
             }
         }
 
@@ -154,38 +43,130 @@ namespace graph.network.wpf.lib
             get { return _input; }
             set
             {
-                if (_input == value) return;
+                //if (_input == value) return;
                 _input = value;
-                //this master GraphNet can parse text and answer different types of questions:
-                var result = gn.Rank(gn.Node(value))[0];
-
-                Graph = new BidirectionalGraph<Node, Edge>();
-                foreach (var path in result.Paths)
+                var input = Net.Node(value);
+                results = Net.Rank(input);
+                Outputs = new ObservableCollection<Node>(Net.Outputs);
+                var orderedOuputs = results.Select(r => r.Output).ToList();
+                Outputs = new ObservableCollection<Node>(Outputs.OrderBy(i =>
                 {
-                    Graph.AddVerticesAndEdgeRange(path.Edges);
-                    Graph.AddVerticesAndEdge(new Edge(result.Input, gn.Node("in"), path[0]));
-                    Graph.AddVerticesAndEdge(new Edge(path[path.Count - 1], gn.Node("out"), result.Output));
-                    Graph.AddVerticesAndEdge(new Edge(result.Output, gn.Node("result"), new Node(result.Output.Result)));
+                    var index = orderedOuputs.IndexOf(i);
+                    if (index == -1) return int.MaxValue;
+                    return index;
+                }).ToList());
+                if (results.Count > 0)
+                {
+                    var result = results[0];
+                    SetResult(result);
                 }
-                graphLayout.Graph = Graph;
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(Outputs)));
+
             }
         }
 
-        private void OnNodeDoubleClick(object sender, MouseButtonEventArgs e)
+        private void SetResult(Result result)
         {
-            if (e.ClickCount == 1) return;
-            var conrol = sender as StackPanel;
-            var node = conrol?.DataContext as Node;
+            Graph = new BidirectionalGraph<Node, Edge>();
+            if (result != null)
+            {
+                foreach (var path in result.Paths)
+                {
+                    Graph.AddVerticesAndEdgeRange(path.Edges);
+                    Graph.AddVerticesAndEdge(new Edge(result.Input, Net.Node("in"), path[0]));
+                    Graph.AddVerticesAndEdge(new Edge(path[path.Count - 1], Net.Node("out"), result.Output));
+                    Graph.AddVerticesAndEdge(new Edge(result.Output, Net.Node("result"), new Node(result.Output.Result)));
+                }
+            }
+
+            PropertyChanged(this, new PropertyChangedEventArgs(nameof(Graph)));
+            Examples = Net.GetExamples(result);
+            PropertyChanged(this, new PropertyChangedEventArgs(nameof(Examples)));
+        }
+
+        public Node Output
+        {
+            get { return _output; }
+            set
+            {
+                _output = value;
+                if (results != null)
+                {
+                    var result =  results.FirstOrDefault(r => r.Output == value);
+                    SetResult(result);
+                }
+            }
+        }
+
+        public void OnNodeDoubleClick(Node node)
+        {
             if (node != null && node.IsGraphNet)
             {
                 var graphNet = (GraphNet)node;
                 var g = new BidirectionalGraph<Node, Edge>();
                 //TODO: need to find a way of just gettin paths from the inputs (need to think about this)
                 g.AddVerticesAndEdgeRange(graphNet.AllEdges());
-                graphLayout.Graph = g;
+                Graph = g;
+                Outputs = new ObservableCollection<Node>(graphNet.Outputs);
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(Graph)));
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(Outputs)));
+
+            }
+        }
+    }
+
+    public class PocGraphLayout : GraphSharp.Controls.GraphLayout<Node, Edge, BidirectionalGraph<Node, Edge>> { };
+    /// <summary>
+    /// Interaction logic for GraphNetView.xaml
+    /// </summary>
+    public partial class GraphNetView : UserControl
+    {
+        private GraphNetViewModel model = new GraphNetViewModel();
+        public GraphNetView()
+        {
+            InitializeComponent();
+            DataContext = model;
+            model.PropertyChanged += Model_PropertyChanged;
+        }
+
+        private void Model_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(model.Graph))
+            {
+                graphLayout.Graph = model.Graph;
+            }
+            if (e.PropertyName == nameof(model.Outputs))
+            {
+                outputs.ItemsSource = model.Outputs;
+            }
+            if (e.PropertyName == nameof(model.Examples))
+            {
+                examples.ItemsSource = model.Examples;
             }
         }
 
-        public BidirectionalGraph<Node, Edge> Graph { get; private set; }
+        private void OnKeyDownHandler(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                model.Input = inputText.Text;
+            }
+        }
+        private void OnNodeDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 1) return;
+            var conrol = sender as StackPanel;
+            var node = conrol?.DataContext as Node;
+            model.OnNodeDoubleClick(node);
+        }
+
+        public GraphNet Net
+        {
+            get => model.Net;
+            set
+            {
+                model.Net = value;
+            }
+        }
     }
 }

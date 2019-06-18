@@ -145,6 +145,10 @@
       <Project>{3781818d-89e0-4c45-90c6-aeb6b78e7728}</Project>
       <Name>graph.network.core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\graph.network.ld\graph.network.ld.csproj">
+      <Project>{070ecbd2-1616-44d8-9394-7993c9849ee5}</Project>
+      <Name>graph.network.ld</Name>
+    </ProjectReference>
     <ProjectReference Include="..\graph.network.wpf.lib\graph.network.wpf.lib.csproj">
       <Project>{0791b765-24a8-4edb-a08c-1a1b8c8093c7}</Project>
       <Name>graph.network.wpf.lib</Name>

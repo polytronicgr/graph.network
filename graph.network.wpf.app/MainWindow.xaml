@@ -9,7 +9,6 @@
         Title="MainWindow" Height="450" Width="800">
     <Grid>
 
-        <lib:GraphNetView x:Name="test">
-        </lib:GraphNetView>
+        <lib:GraphNetView x:Name="test"></lib:GraphNetView>
     </Grid>
 </Window>

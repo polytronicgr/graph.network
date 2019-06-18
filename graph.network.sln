@@ -11,6 +11,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "graph.network.wpf.lib", "gr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "graph.network.wpf.app", "graph.network.wpf.app\graph.network.wpf.app.csproj", "{BB313CDA-D9A8-4566-A150-2EDDF09B9046}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "graph.network.ld", "graph.network.ld\graph.network.ld.csproj", "{070ECBD2-1616-44D8-9394-7993C9849EE5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "graph.network.ld.tests", "graph.network.ld.tests\graph.network.ld.tests.csproj", "{42AF96C3-07DB-4FF9-81E0-170096878118}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{759213C2-BC42-4596-BDD7-E77F9767990B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ui", "ui", "{A57E7F4E-008F-430E-90DB-3921A55406D4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{92FF180E-F757-4342-89C0-EDCA66C8B879}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,9 +43,25 @@ Global
 		{BB313CDA-D9A8-4566-A150-2EDDF09B9046}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB313CDA-D9A8-4566-A150-2EDDF09B9046}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB313CDA-D9A8-4566-A150-2EDDF09B9046}.Release|Any CPU.Build.0 = Release|Any CPU
+		{070ECBD2-1616-44D8-9394-7993C9849EE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{070ECBD2-1616-44D8-9394-7993C9849EE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{070ECBD2-1616-44D8-9394-7993C9849EE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{070ECBD2-1616-44D8-9394-7993C9849EE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42AF96C3-07DB-4FF9-81E0-170096878118}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42AF96C3-07DB-4FF9-81E0-170096878118}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42AF96C3-07DB-4FF9-81E0-170096878118}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42AF96C3-07DB-4FF9-81E0-170096878118}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3781818D-89E0-4C45-90C6-AEB6B78E7728} = {92FF180E-F757-4342-89C0-EDCA66C8B879}
+		{270F2830-793B-4B0A-9598-2E3DD7059DDD} = {759213C2-BC42-4596-BDD7-E77F9767990B}
+		{0791B765-24A8-4EDB-A08C-1A1B8C8093C7} = {A57E7F4E-008F-430E-90DB-3921A55406D4}
+		{BB313CDA-D9A8-4566-A150-2EDDF09B9046} = {A57E7F4E-008F-430E-90DB-3921A55406D4}
+		{070ECBD2-1616-44D8-9394-7993C9849EE5} = {92FF180E-F757-4342-89C0-EDCA66C8B879}
+		{42AF96C3-07DB-4FF9-81E0-170096878118} = {759213C2-BC42-4596-BDD7-E77F9767990B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BBB399E6-474A-409F-96EF-4C91C395503F}

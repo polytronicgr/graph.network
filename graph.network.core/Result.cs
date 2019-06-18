@@ -16,5 +16,18 @@ namespace graph.network.core
         public List<NodePath> Paths { get; }
         public Node Output { get; }
         public Node Input { get; }
+
+        public override string ToString()
+        {
+            if (Paths == null || Paths.Count == 0)
+            {
+                return $"prob={Probabilty}";
+            }
+            else
+            {
+                return $"{Paths[0].ToString()}"; 
+            }
+            
+        }
     }
 }

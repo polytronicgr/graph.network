@@ -52,6 +52,12 @@ namespace graph.network.core
             featureData.Add(data);
         }
 
+        public IEnumerable<List<NodePath>> GetTraingData(Node output)
+        {
+            var data = _data.Where(e => e.Item2 == output).Select(e => e.Item1);
+            return data;
+        }
+
         public double[,,] GetFeatureData(List<NodePath> paths)
         {
             var result = new double[maxPathLenght, numberOfNodes, maxNumberOfPaths];
