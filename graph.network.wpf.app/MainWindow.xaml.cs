@@ -25,8 +25,8 @@ namespace graph.network.wpf.app
         public MainWindow()
         {
             InitializeComponent();
-            test.Net = LoadGraphNet();
-            //test.Net = LoadSparqlGraphNet();
+            //test.Net = LoadGraphNet();
+            test.Net = LoadSparqlGraphNet();
         }
         private GraphNet LoadSparqlGraphNet()
         {

@@ -96,7 +96,7 @@ namespace graph.network.core
         /// so nodes can expose any interface that they wish
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<Node> GetInterface()
+        public virtual IEnumerable<Node> GetInterface()
         {
             //NOTE: could cache this 
             return Edges.Count > 0 ? Edges.Select(e => e.Obj) : new List<Node> { this };

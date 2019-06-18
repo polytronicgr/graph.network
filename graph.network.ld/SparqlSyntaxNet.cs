@@ -11,6 +11,9 @@ namespace graph.network.ld
     {
         private static string IRI_PREFIX = "http://graph.network.com/ld/";
 
+        public string CurrentQuery { get; set; }
+        public bool InParseMode { get; private set; }
+
         public SparqlSyntaxNet() : this(R("sparql"))
         { }
 
@@ -44,6 +47,7 @@ namespace graph.network.ld
 
         public void TrainFromQueries(params string[] queries)
         {
+            InParseMode = false;
             var examples = new List<NodeExample>();
             
             foreach (var query in queries)
@@ -59,6 +63,8 @@ namespace graph.network.ld
             }
 
             Train(examples.ToArray());
+
+            InParseMode = true;
         }
 
 
@@ -85,10 +91,18 @@ namespace graph.network.ld
 
         protected override Node NewNode(object value)
         {
-            return new UriNode(value.ToString());
+            if (InParseMode)
+            {
+                return new TextMatchingNode(value.ToString());
+            }
+            else
+            {
+                return new UriNode(value.ToString());
+            }
+            
         }
 
 
-        public string CurrentQuery { get; set; }
+
     }
 }

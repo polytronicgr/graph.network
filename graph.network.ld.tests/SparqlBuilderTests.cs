@@ -17,7 +17,6 @@ namespace graph.network.ld.tests
                 "select * where { ?s <http://test.com/name> ?name }"
                 );
 
-            gn.CurrentQuery = "";
             Assert.AreEqual("*", gn.Predict("select"));
             Assert.AreEqual("where", gn.Predict("*"));
             Assert.AreEqual("{", gn.Predict("where"));
@@ -27,6 +26,34 @@ namespace graph.network.ld.tests
             Assert.AreEqual("}", gn.Predict("?o"));
             Assert.AreEqual("?p", gn.Predict("distinct"));
 
+        }
+
+        [Test]
+        public void TestTextMatcher()
+        {
+            var gn = new SparqlSyntaxNet();
+
+            gn.TrainFromQueries(
+                "select * where { ?s ?p ?o }",
+                "select distinct ?p where { ?s ?p ?o }",
+                "select * where { ?s <http://test.com/name> ?name }"
+                );
+
+            Assert.AreEqual("select", gn.Predict("s"));
+        }
+
+        [Test,Ignore("TODO")]
+        public void TestTextMatcherFiltersSyntax()
+        {
+            var gn = new SparqlSyntaxNet();
+
+            gn.TrainFromQueries(
+                "select * where { ?s ?p ?o }",
+                "select distinct ?p where { ?s ?p ?o }",
+                "select * where { ?s <http://test.com/name> ?name }"
+                );
+
+            Assert.AreEqual("distinct", gn.Predict("select d"));
         }
     }
 }
