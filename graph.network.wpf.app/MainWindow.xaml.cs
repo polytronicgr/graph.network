@@ -54,6 +54,7 @@ namespace graph.network.wpf.app
                 graph.Add("p:mayor", "http://www.w3.org/2000/01/rdf-schema#domain", "p:City");
                 graph.Add("p:Country", "http://www.w3.org/2000/01/rdf-schema#subClassof", "p:Place");
                 graph.Add("p:City", "http://www.w3.org/2000/01/rdf-schema#subClassof", "p:Place");
+                graph.Add("p:Town", "http://www.w3.org/2000/01/rdf-schema#subClassof", "p:Place");
             });
 
             gn.TrainFromQueries(
@@ -65,6 +66,7 @@ namespace graph.network.wpf.app
 
             gn.Add("london", "a", "p:City");
             gn.Add("france", "a", "p:Country");
+            gn.Add("farnham", "a", "p:Town");
 
             return gn;
         }
