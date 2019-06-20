@@ -8,14 +8,21 @@ namespace graph.network.core
     {
         Dictionary<string, object> properties = new Dictionary<string, object>();
 
+        public bool UseEdgesAsInterface { get; set; } = true;
+
+        public object Value { get; }
+
+        public virtual List<Edge> Edges { get; set; } = new List<Edge>();
+        public virtual List<Node> DependentNodes { get; private set; } = new List<Node>();
+
+        public virtual bool RemoveOrphanedEdgeObjs { get; set; } = true;
+        public object Result { get; set; }
+
         public Node(object value)
         {
             Value = value;
             Result = value;
         }
-
-
-        public object Value { get; }
 
         public virtual void OnAdd(GraphNet graph)
         {
@@ -83,12 +90,7 @@ namespace graph.network.core
             return !passesThroughAnOutputOrThisNode;
         }
 
-        public virtual List<Edge> Edges { get; set; } = new List<Edge>();
-        public virtual List<Node> DependentNodes { get; private set; } = new List<Node>();
 
-
-        public virtual bool RemoveOrphanedEdgeObjs { get; set; } = true;
-        public object Result { get; set; }
 
         /// <summary>
         /// A node exposes an interface that paths will be calulated from by default the nodes interface is 
@@ -99,7 +101,7 @@ namespace graph.network.core
         public virtual IEnumerable<Node> GetInterface()
         {
             //NOTE: could cache this 
-            return Edges.Count > 0 ? Edges.Select(e => e.Obj) : new List<Node> { this };
+            return Edges.Count > 0 && UseEdgesAsInterface ? Edges.Select(e => e.Obj) : new List<Node> { this };
         }
 
         public Node AddEdge(string predicate, object obj, GraphNet gn)
@@ -133,6 +135,7 @@ namespace graph.network.core
         {
             get { return ToString(); }
         }
+
 
 
         public override bool Equals(object obj)

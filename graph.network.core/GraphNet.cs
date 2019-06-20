@@ -182,9 +182,9 @@ namespace graph.network.core
             }
         }
 
-        private static Edge GetBackLink(Edge edge)
+        private Edge GetBackLink(Edge edge)
         {
-            return new Edge(edge.Obj, edge.Predicate, edge.Subject);
+            return new Edge(edge.Obj, Node(edge.Predicate.Value.ToString() + "-inv"), edge.Subject);
         }
 
 

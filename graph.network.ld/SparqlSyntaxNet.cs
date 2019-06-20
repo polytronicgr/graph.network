@@ -1,19 +1,8 @@
-﻿using graph.network.core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace graph.network.ld
+﻿namespace graph.network.ld
 {
-    public class SparqlSyntaxNet : GraphNet
+
+    public class SparqlSyntaxNet : LinkedDataNet
     {
-        private static string IRI_PREFIX = "http://graph.network.com/ld/";
-
-        public string CurrentQuery { get; set; }
-        public bool InParseMode { get; private set; }
-
         public SparqlSyntaxNet() : this(R("sparql"))
         { }
 
@@ -44,65 +33,5 @@ namespace graph.network.ld
             Outputs.Add(Node("?o"));
             Outputs.Add(Node("distinct"));
         }
-
-        public void TrainFromQueries(params string[] queries)
-        {
-            InParseMode = false;
-            var examples = new List<NodeExample>();
-            
-            foreach (var query in queries)
-            {
-                var words = query.Split(' ');
-                var lastWord = Node("");
-                foreach (var word in words)
-                {
-                    var node = Node(word);
-                    examples.Add(new NodeExample(Node(lastWord), node));
-                    lastWord = node;
-                }
-            }
-
-            Train(examples.ToArray());
-
-            InParseMode = true;
-        }
-
-
-        public static string R(string value)
-        {
-            return IRI_PREFIX + value;
-        }
-
-        public override Node Node(object value)
-        {
-            var node = value as Node;
-            if (node == null)
-            {
-                var str = value.ToString();
-                var iri = str.StartsWith("http") ? str : R(str);
-                return base.Node(iri);
-            }
-            else
-            {
-                return base.Node(node);
-            }
-
-        }
-
-        protected override Node NewNode(object value)
-        {
-            if (InParseMode)
-            {
-                return new TextMatchingNode(value.ToString());
-            }
-            else
-            {
-                return new UriNode(value.ToString());
-            }
-            
-        }
-
-
-
     }
 }
