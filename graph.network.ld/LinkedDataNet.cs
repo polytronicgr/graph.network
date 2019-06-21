@@ -7,9 +7,9 @@ namespace graph.network.ld
     public class LinkedDataNet : GraphNet
     {
         public static readonly string IRI_PREFIX = "http://graph.network.com/ld/";
-        protected Dictionary<string, string> prefixes = new Dictionary<string, string>();
 
         public bool InParseMode { get; set; }
+        public Dictionary<string, string> Prefixes { get; set; } = new Dictionary<string, string>();
 
         public LinkedDataNet(string name, int maxPathLenght = 20, int maxNumberOfPaths = 10) : base(name, maxPathLenght, maxNumberOfPaths)
         {
@@ -60,7 +60,7 @@ namespace graph.network.ld
 
         public string ToFullUri(string uri)
         {
-            foreach (var prefix in prefixes)
+            foreach (var prefix in Prefixes)
             {
                 var fullPrefix = prefix.Key.TrimEnd(':') + ":";
                 if (uri.StartsWith(fullPrefix))

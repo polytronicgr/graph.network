@@ -115,6 +115,11 @@ namespace graph.network.core
             return new NodeExample(input, Node(output));
         }
 
+        public void Add(Node subject, string predicate, Node obj)
+        {
+            Add(new Edge(subject, Node(predicate), obj));
+        }
+
         public void Add(Node subject, string predicate, object obj)
         {
             Add(new Edge(subject, Node(predicate), Node(obj)));
