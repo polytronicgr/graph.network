@@ -75,7 +75,10 @@ namespace graph.network.wpf.lib
                     Graph.AddVerticesAndEdgeRange(path.Edges);
                     Graph.AddVerticesAndEdge(new Edge(result.Input, Net.Node("in"), path[0]));
                     Graph.AddVerticesAndEdge(new Edge(path[path.Count - 1], Net.Node("out"), result.Output));
-                    Graph.AddVerticesAndEdge(new Edge(result.Output, Net.Node("result"), new Node(result.Output.Result)));
+                    if (result.Output.Result != null && result.Output.Result.ToString() != result.Output.ShortId)
+                    {
+                        Graph.AddVerticesAndEdge(new Edge(result.Output, Net.Node("result"), new Node(result.Output.Result)));
+                    }
                 }
             }
 

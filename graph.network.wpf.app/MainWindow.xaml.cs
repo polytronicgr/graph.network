@@ -59,9 +59,12 @@ namespace graph.network.wpf.app
 
             gn.TrainFromQueries(
                 "select * where { ?s a p:City . ?s p:mayor ?mayor }",
+                "select * where { ?s a p:City . ?s p:code ?code }",
                 "select * where { ?s a p:Country . ?s p:flag ?flag }" ,
                 "select * where { ?s a p:Country . ?s p:national-anthem ?national-anthem }",
-                "select * where { ?s p:name ?name }"
+                "select * where { ?s a p:Country . ?s p:name ?name }",
+                "select * where { ?s p:name ?name }",
+                "select * where { ?s a p:Place . ?s p:code ?code }"
                 );
 
             gn.Add("london", "a", "p:City");

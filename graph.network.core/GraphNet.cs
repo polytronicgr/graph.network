@@ -20,6 +20,8 @@ namespace graph.network.core
         public Dictionary<object, Node> NodeIndex { get; set; } = new Dictionary<object, Node>();
         public string DefaultInput { get; set; }
         public bool LimitNumberOfPaths { get;  set; }
+        
+        public bool AddBiDirectionalLinks { get; set; } = true;
 
         public GraphNet(string name, int maxPathLenght = 20, int maxNumberOfPaths = 10) : base(name)
         {
@@ -180,10 +182,13 @@ namespace graph.network.core
             Add(edge.Subject, false);
             Add(edge.Obj, false);
             graph.AddVerticesAndEdge(edge);
-            Edge backlink = GetBackLink(edge);
-            if (edge.Subject != edge.Obj && !graph.ContainsEdge(backlink))
+            if (AddBiDirectionalLinks)
             {
-                graph.AddVerticesAndEdge(backlink);
+                Edge backlink = GetBackLink(edge);
+                if (edge.Subject != edge.Obj && !graph.ContainsEdge(backlink))
+                {
+                    graph.AddVerticesAndEdge(backlink);
+                }
             }
         }
 

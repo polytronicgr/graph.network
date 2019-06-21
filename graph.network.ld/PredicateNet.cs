@@ -10,7 +10,7 @@ namespace graph.network.ld
         public string Prefix { get; }
         public PredicateNet(string prefix, Uri ontology, Action<Uri, GraphNet> loadEdges = null) : base(ontology.ToString())
         {
-            prefixes.Add(prefix, ontology.ToString());
+            Prefixes.Add(prefix, ontology.ToString());
             Add(this, "prefix", prefix);
 
             if (loadEdges == null)
