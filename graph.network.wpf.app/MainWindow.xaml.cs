@@ -26,6 +26,7 @@ namespace graph.network.wpf.app
         {
             InitializeComponent();
             //test.Net = LoadGraphNet();
+            //test.Net = LoadQAndA();
             //test.Net = LoadSparqlGraphNet();
             test.Net = LoadPredicateGraph();
         }
@@ -40,6 +41,46 @@ namespace graph.network.wpf.app
                 "select * where { ?s <http://test.com/other> ?other }"
                 );
 
+            return gn;
+        }
+
+        private GraphNet LoadQAndA()
+        {
+            var gn = new GraphNet("gn", maxNumberOfPaths: 5);
+            gn.Add("london", "is_a", "city");
+            gn.Add("london", "capital_of", "uk");
+            gn.Add("paris", "is_a", "city");
+            gn.Add("york", "is_a", "city");
+            gn.Add("paris", "capital_of", "france");
+            gn.Add("uk", "is_a", "country");
+            gn.Add("france", "is_a", "country");
+            gn.Add(gn.Node(true), true);
+            gn.Add(gn.Node(false), true);
+
+            //register a NLP tokeniser node that creates an edge for each word and 
+            //also add these words to the true and false output nodes so that we can
+            //map the paths between words: (london >> is_a >> city >> true)
+            gn.RegisterDynamic("ask", (node, graph) =>
+            {
+                var words = node.Value.ToString().Split(' ');
+                gn.Node(node, "word", words);
+                Node.BaseOnAdd(node, graph);
+                gn.Node(true, "word", words);
+                gn.Node(false, "word", words);
+            });
+
+            //set new nodes to default to creating this 'ask' node
+            gn.DefaultInput = "ask";
+
+            //train some examples of true and false statments using the NLP 'ask' node as the input 
+            gn.Train(
+                  new NodeExample(gn.Node("london is a city"), gn.Node(true))
+                , new NodeExample(gn.Node("london is the caplital of uk"), gn.Node(true))
+                , new NodeExample(gn.Node("london is the caplital of france"), gn.Node(false))
+                , new NodeExample(gn.Node("london is a country"), gn.Node(false))
+                , new NodeExample(gn.Node("uk is a country"), gn.Node(true))
+                , new NodeExample(gn.Node("uk is a city"), gn.Node(false))
+            );
             return gn;
         }
 
