@@ -1,7 +1,10 @@
 ﻿using graph.network.core;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using VDS.RDF.Parsing;
+using VDS.RDF.Parsing.Tokens;
 
 namespace graph.network.ld
 {
@@ -36,29 +39,36 @@ namespace graph.network.ld
             foreach (var query in queries)
             {
                 queryId++;
-                var words = query.Split(' ');
+                var tokeniser = new SparqlTokeniser(ParsingTextReader.Create(new StringReader(query)), SparqlQuerySyntax.Sparql_1_1);
+                var token = tokeniser.GetNextToken();
+                IToken beforeLastToken = null;
+                IToken lastToken = null;
 
-
-                var beforeLastWord = Node("");
-                var lastWord = "";
-                foreach (var w in words)
+                while (token != null && !(token is EOFToken))
                 {
-                    var word = w.StartsWith("?") ? queryId + "." + w : w;
-                    var node = Node(word);
+                    token = tokeniser.GetNextToken();
+                    var tokenValue = token is VariableToken ? queryId + "." + token.Value : token.Value;
+                    var node = Node(tokenValue);
                     node.UseEdgesAsInterface = false;
-                    if (word.Contains(Prefix) && Outputs.Contains(node))
+                    if (tokenValue.Contains(Prefix) && Outputs.Contains(node))
                     {
-                        var last = Node(lastWord);
+                        var last = Node(queryId + "." + lastToken.Value);
                         examples.Add(new NodeExample(last, node));
                     }
-                    if (beforeLastWord.ShortId.Contains("?") && ( lastWord == "a" || lastWord.Contains(Prefix)))
+                    if (beforeLastToken is VariableToken && (lastToken.Value.Contains("a") || lastToken.Value.Contains(Prefix)))
                     {
-                        beforeLastWord.AddEdge(Node(lastWord), node);
+                        var n = Node(queryId + "." + beforeLastToken.Value);
+                       n.AddEdge(Node("a"), node);
                     }
-                    
-                    beforeLastWord = Node(lastWord);
-                    lastWord = word;
+
+                    beforeLastToken = lastToken;
+                    lastToken = token;
                 }
+
+
+
+         
+               
 
             }
 

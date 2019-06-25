@@ -70,5 +70,7 @@ namespace graph.network.ld.tests
             country.AddEdge(new UriNode("a"), new UriNode("http://test.com/places/Country"));
             Assert.AreEqual("flag", gn.Predict(country));
         }
+
+        //node to return return valiable names and shortend predicate names etc from the existing graph
     }
 }

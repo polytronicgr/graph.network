@@ -90,8 +90,8 @@ namespace graph.network.wpf.app
                 graph.Add("p:name", "http://www.w3.org/2000/01/rdf-schema#domain", "p:Place");
                 graph.Add("p:code", "http://www.w3.org/2000/01/rdf-schema#domain", "p:Place");
                 graph.Add("p:flag", "http://www.w3.org/2000/01/rdf-schema#domain", "p:Country");
-                graph.Add("p:national-anthem", "http://www.w3.org/2000/01/rdf-schema#domain", "p:Country");
-                graph.Add("p:capital-city", "http://www.w3.org/2000/01/rdf-schema#domain", "p:Country");
+                graph.Add("p:nationalAnthem", "http://www.w3.org/2000/01/rdf-schema#domain", "p:Country");
+                graph.Add("p:capitalCity", "http://www.w3.org/2000/01/rdf-schema#domain", "p:Country");
                 graph.Add("p:mayor", "http://www.w3.org/2000/01/rdf-schema#domain", "p:City");
                 graph.Add("p:Country", "http://www.w3.org/2000/01/rdf-schema#subClassof", "p:Place");
                 graph.Add("p:City", "http://www.w3.org/2000/01/rdf-schema#subClassof", "p:Place");
@@ -102,7 +102,7 @@ namespace graph.network.wpf.app
                 "select * where { ?s a p:City . ?s p:mayor ?mayor }",
                 "select * where { ?s a p:City . ?s p:code ?code }",
                 "select * where { ?s a p:Country . ?s p:flag ?flag }" ,
-                "select * where { ?s a p:Country . ?s p:national-anthem ?national-anthem }",
+                "select * where { ?s a p:Country . ?s p:nationalAnthem ?nationalAnthem }",
                 "select * where { ?s a p:Country . ?s p:name ?name }",
                 "select * where { ?s p:name ?name }",
                 "select * where { ?s a p:Place . ?s p:code ?code }"
