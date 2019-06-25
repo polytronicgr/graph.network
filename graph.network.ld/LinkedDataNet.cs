@@ -1,5 +1,4 @@
 ﻿using graph.network.core;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using VDS.RDF.Parsing;
