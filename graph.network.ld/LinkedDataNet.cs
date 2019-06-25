@@ -1,6 +1,9 @@
 ﻿using graph.network.core;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using VDS.RDF.Parsing;
+using VDS.RDF.Parsing.Tokens;
 
 namespace graph.network.ld
 {
@@ -27,10 +30,15 @@ namespace graph.network.ld
 
             foreach (var query in queries)
             {
-                var words = query.Split(' ');
+                var tokeniser = new SparqlTokeniser(ParsingTextReader.Create(new StringReader(query)), SparqlQuerySyntax.Sparql_1_1);
+
+
                 var lastWord = Node("");
-                foreach (var word in words)
+                var token = tokeniser.GetNextToken();
+                while (token != null && !(token is EOFToken))
                 {
+                    token = tokeniser.GetNextToken();
+                    var word = token.Value.ToLower();
                     var node = Node(word);
                     examples.Add(new NodeExample(Node(lastWord), node));
                     lastWord = node;
