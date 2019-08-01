@@ -67,7 +67,7 @@ namespace graph.network.core
                 var path = paths[p];
                 for (int i = 0; i < path.Count; i++)
                 {
-                    if (path.Count >= maxPathLenght) throw new InvalidOperationException("path is too long");
+                    if (path.Count >= maxPathLenght) throw new InvalidOperationException($"path is too long {path.Count} > {maxPathLenght}");
                     Node node = path[i];
                     var index = nodeIndex.IndexOf(node);
                     if (index != -1)

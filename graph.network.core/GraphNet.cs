@@ -11,22 +11,23 @@ namespace graph.network.core
         private BidirectionalGraph<Node, Edge> graph = new BidirectionalGraph<Node, Edge>();
         private Dictionary<string, Action<Node, GraphNet>> dynamicPrototypes = new Dictionary<string, Action<Node, GraphNet>>();
         private Net net;
-        private readonly int maxPathLenght;
-        private readonly int maxNumberOfPaths;
-
 
         public List<Node> Outputs { get; set; } = new List<Node>();
+        public List<Node> Inputs { get; set; } = new List<Node>();
 
         public Dictionary<object, Node> NodeIndex { get; set; } = new Dictionary<object, Node>();
         public string DefaultInput { get; set; }
         public bool LimitNumberOfPaths { get;  set; }
-        
         public bool AddBiDirectionalLinks { get; set; } = true;
+        public int MaxPathLenght { get; set; }
+        public int MaxNumberOfPaths { get; set; }
+
+        public Action<BidirectionalGraph<Node, Edge>> OnGraphSnapshot { get; set; }
 
         public GraphNet(string name, int maxPathLenght = 20, int maxNumberOfPaths = 10) : base(name)
         {
-            this.maxPathLenght = maxPathLenght;
-            this.maxNumberOfPaths = maxNumberOfPaths;
+            MaxPathLenght = maxPathLenght;
+            MaxNumberOfPaths = maxNumberOfPaths;
         }
 
         public override void OnAdd(GraphNet graph)
@@ -84,6 +85,7 @@ namespace graph.network.core
         
         public virtual Node Node(object value)
         {
+            if (value is Node n && NodeIndex.ContainsKey(n.Value)) return NodeIndex[n.Value];
             if (NodeIndex.ContainsKey(value)) return NodeIndex[value];
 
             var node = DefaultInput == null ? NewNode(value) : DynamicNode(DefaultInput)(value);
@@ -119,7 +121,11 @@ namespace graph.network.core
 
         public void Add(Node subject, string predicate, Node obj)
         {
-            Add(new Edge(subject, Node(predicate), obj));
+            Add(subject, Node(predicate), obj);
+        }
+        public void Add(Node subject, Node predicate, Node obj)
+        {
+            Add(new Edge(subject, predicate, obj));
         }
 
         public void Add(Node subject, string predicate, object obj)
@@ -144,11 +150,15 @@ namespace graph.network.core
             Add(new Edge(Node(subject), Node(predicate), output));
         }
 
-        public void Add(Node node, bool isOutput = false)
+        public void Add(Node node, bool isOutput = false, bool isInput = false)
         {
             if (isOutput && !Outputs.Contains(node))
             {
                 Outputs.Add(node);
+            }
+            if (isInput && !Inputs.Contains(node))
+            {
+                Inputs.Add(node);
             }
             if (graph.ContainsVertex(node)) return;
             if (!NodeIndex.ContainsKey(node.Value))
@@ -182,9 +192,10 @@ namespace graph.network.core
             Add(edge.Subject, false);
             Add(edge.Obj, false);
             graph.AddVerticesAndEdge(edge);
-            if (AddBiDirectionalLinks)
+            if (AddBiDirectionalLinks && !edge.Inverted)
             {
                 Edge backlink = GetBackLink(edge);
+                backlink.Inverted = true;
                 if (edge.Subject != edge.Obj && !graph.ContainsEdge(backlink))
                 {
                     graph.AddVerticesAndEdge(backlink);
@@ -201,33 +212,90 @@ namespace graph.network.core
         public  override void Train(params Example[] examples)
         {
             List<Node> allNodes = GetNodeIndex();
-            net = new Net(allNodes, Outputs, maxPathLenght, maxNumberOfPaths);
+            net = new Net(allNodes, Outputs, MaxPathLenght, MaxNumberOfPaths);
             foreach (var ouputNode in Outputs)
             {
                 ouputNode.Train(examples);
             }
-
+            
             foreach (Example example in examples)
             {
-                var inputNode = example.Input as Node; //TODO: what if the input is not a node
-                foreach (var ouputNode in Outputs.ToList())
+                var paths = GetPaths(example);
+                if (paths.Count > 0)
                 {
-                    var nodeExample = new NodeExample(inputNode, ouputNode);
-                    var paths = GetPaths(nodeExample);
-                    if (paths != null && paths.Count != 0 && ouputNode.Result != null && ouputNode.Result.Equals(example.Output)   ) //TODO: what about learning and getting closer
+                    var first = paths[0];
+                    var output = Node(first[first.Count - 1]);
+                    if (!Outputs.Contains(output))
                     {
-                        net.AddToTraining(paths, ouputNode);
+                        throw new InvalidOperationException($"{output} is not an output in { this}");
                     }
+                    paths.ForEach(p => {
+                        var o = Node(p[p.Count - 1]);
+                        if (o != output) throw new InvalidOperationException($"multiple outputs");
+                    });
+                    net.AddToTraining(paths, output);
                 }
             }
             net.Train();
+        }
+
+        /// <summary>
+        /// Gets all the paths for an example
+        /// </summary>
+        /// <param name="example"></param>
+        /// <returns></returns>
+        public List<NodePath> GetPaths(Example example)
+        {
+            var results = new List<NodePath>();
+            var inputNode = example.Input as Node; //TODO: what if the input is not a node
+            //check each output
+            foreach (var outputNode in Outputs.ToList())
+            {
+                var nodeExample = new NodeExample(inputNode, outputNode);
+                //TODO: perhaps node could have a getPaths (that takes an example and graph) that graphnet overrides - this could simplify this code
+                if (!(outputNode is GraphNet subGraph))
+                {
+                    //if this is not a sub graph then get the paths
+                    var paths = GetPaths(nodeExample);
+                    //add if the result matches the exampe then add this paths as an example
+                    if (paths != null && paths.Count != 0 && outputNode.Result != null && outputNode.Result.Equals(example.Output)) //TODO: what about learning and getting closer
+                    {
+                        results.AddRange(paths);
+                    }
+                }
+                else
+                {
+                    //if the output is an graph then get the paths from that
+                    var paths = subGraph.GetPaths(example);
+                    if (paths.Count > 0)
+                    {
+                        //get it to make a prediction and if that matches the example then add these paths
+                        var result = subGraph.Predict(inputNode);
+                        if (result != null && result.Equals(example.Output)) //TODO: what about learning and getting closer
+                        {
+                            //add a link in the path to this subgraph
+                            //TODO: should subgraphs be transparent like this?? or should this graph calculate its path to this subgraph and then the subgraph appends its part???
+                            paths.ForEach(p =>
+                            {
+                                if (!p.Last().Equals(subGraph))
+                                {
+                                    p.Add(Node("in"));
+                                    p.Add(subGraph);
+                                }
+                            });
+                            results.AddRange(paths);
+                        }
+                    }
+                }
+            }
+            return results;
         }
         
         public void Train(params NodeExample[] examples)
         {
             List<Node> allNodes = GetNodeIndex();
 
-            net = new Net(allNodes, Outputs, maxPathLenght, maxNumberOfPaths);
+            net = new Net(allNodes, Outputs, MaxPathLenght, MaxNumberOfPaths);
             foreach (NodeExample example in examples)
             {
                 var paths = GetPaths(example);
@@ -262,7 +330,7 @@ namespace graph.network.core
             if (!graph.ContainsVertex(input))
             {
                 inputAdded = true;
-                Add(input, false);
+                Add(input, false, true);
             }
             if (!graph.ContainsVertex(output))
             {
@@ -277,7 +345,7 @@ namespace graph.network.core
             {
                 foreach (var o in output.GetInterface())
                 {
-                    AddPath(i, o, input, results);
+                    AddPath(i, o, input, output, results);
                 }
             }
             results = results.Distinct().ToList();
@@ -290,6 +358,7 @@ namespace graph.network.core
                 n.OnProcess(this, input, results);
             }
 
+            OnGraphSnapshot?.Invoke(graph);
 
             //remove any temp inputs and outputs that were added on the fly
             if (inputAdded)
@@ -302,22 +371,32 @@ namespace graph.network.core
             }
 
             //TODO: check that this trim is safe
-            if (results.Count > maxNumberOfPaths && LimitNumberOfPaths)
+            if (results.Count >= MaxNumberOfPaths && LimitNumberOfPaths)
             {
-                results = results.OrderBy(p => p.Count).Take(maxNumberOfPaths - 1).ToList();
+                results = results.OrderBy(p => p.Count).Take(MaxNumberOfPaths - 1).ToList();
             }
             return results;
         }
 
         public override bool IsGraphNet => true;
 
-        private void AddPath(Node inputInterfaceNode, Node outputInterfaceNode, Node masterInputNode, List<NodePath> paths)
+        public Edge GetEdge(Node a, Node b)
         {
-            //TOD: think about this - it can happen if you have an orphend edge 
-            if (!NodeIndex.ContainsKey(inputInterfaceNode.Value)) return;
-            if (!NodeIndex.ContainsKey(outputInterfaceNode.Value)) return;
+            var first = graph.Edges.Where(e => e.Subject.Value.ToString().Equals(a.Value.ToString()) && e.Obj.Value.ToString().Equals(b.Value.ToString())).FirstOrDefault();
+            if (first != null) return first;
+            return graph.Edges.Where(e => e.Obj.Value.ToString().Equals(a.Value.ToString()) && e.Subject.Value.ToString().Equals(b.Value.ToString())).FirstOrDefault();
+        }
+
+        private void AddPath(Node inputInterfaceNode, Node outputInterfaceNode, Node masterInputNode, Node masterOutNode, List<NodePath> paths)
+        {
+            if (masterInputNode.Value.Equals(masterOutNode.Value)) return;
+            //TODO: think about this - it can happen if you have an orphend edge 
+            if (inputInterfaceNode == null || !NodeIndex.ContainsKey(inputInterfaceNode.Value)) return;
+            if (outputInterfaceNode == null || !NodeIndex.ContainsKey(outputInterfaceNode.Value)) return;
             inputInterfaceNode = NodeIndex[inputInterfaceNode.Value];
             outputInterfaceNode = NodeIndex[outputInterfaceNode.Value];
+            masterInputNode = NodeIndex[masterInputNode.Value];
+            masterOutNode = NodeIndex[masterOutNode.Value];
             //if (inputInterfaceNode == outputInterfaceNode)
             //{
             //    paths.Add(new NodePath(new Edge(inputInterfaceNode, Node("direct"), outputInterfaceNode)));
@@ -331,7 +410,43 @@ namespace graph.network.core
                     NodePath nodePath = new NodePath(path);
                     if (masterInputNode.IsPathValid(this, nodePath) && inputInterfaceNode.IsPathValid(this, nodePath) && outputInterfaceNode.IsPathValid(this, nodePath))
                     {
-                        paths.Add(nodePath);
+                        var p = path.ToList();
+                        //TODO: make these calls simpler and neater
+                        if (!inputInterfaceNode.Value.Equals(masterInputNode.Value))
+                        {
+                            Edge edge = GetEdge(masterInputNode, inputInterfaceNode);
+                          
+                            if (edge != null)
+                            {
+                                p.Insert(0, edge);
+                            }
+                            else
+                            {
+                                //p.Insert(0,new Edge(masterInputNode, Node("to"), inputInterfaceNode));
+                                throw new InvalidOperationException($"could not link {masterInputNode} to {inputInterfaceNode}");
+                            }
+                            
+                        }
+                        if (outputInterfaceNode != masterOutNode)
+                        {
+                            Edge edge = GetEdge(outputInterfaceNode, masterOutNode);
+                            if (edge != null)
+                            {
+                                p.Add(edge);
+                            }
+                            else
+                            {
+                                if (masterOutNode.IsGraphNet)
+                                {
+                                    p.Add(new Edge(outputInterfaceNode, Node("in"), masterOutNode));
+                                }
+                                else
+                                {
+                                    throw new InvalidOperationException($"could not link {masterOutNode} to {outputInterfaceNode}");
+                                }
+                            }
+                        }
+                        paths.Add(new NodePath(p));
                         return;
                     }
                 }
@@ -347,6 +462,10 @@ namespace graph.network.core
             if (Outputs.Contains(node))
             {
                 Outputs.Remove(node);
+            }
+            if (Inputs.Contains(node))
+            {
+                Inputs.Remove(node);
             }
         }
 
@@ -387,22 +506,33 @@ namespace graph.network.core
         {
             var results = new List<Result>();
             if (input == null) return results;
-            Outputs.ToList().ForEach(ouput => AddResult(input, ouput, results));
-            results.Sort((r1, r2) => r2.Probabilty.CompareTo(r1.Probabilty));
-            return results;
+            Outputs.ToList().ForEach(ouput => AddResult(input, ouput, results,1));
+            var ordered = results.OrderByDescending(r => r.Probabilty).ThenBy(r => r.Paths.Count == 0 ? int.MaxValue : r.Paths.Count);
+            return ordered.ToList();
         }
 
-        private void AddResult(Node input, Node ouput, List<Result> results)
+  
+
+        private void AddResult(Node input, Node ouput, List<Result> results, double parentProbabilty)
         {
             var paths = GetPaths(input, ouput);
             if (net == null)
             {
-                net = new Net(GetNodeIndex(), Outputs, maxPathLenght, maxNumberOfPaths);
+                net = new Net(GetNodeIndex(), Outputs, MaxPathLenght, MaxNumberOfPaths);
             }
-
-            var probabilty = net.GetProbabilty(paths, ouput);
-            var result = new Result(input, ouput, paths, probabilty);
-            results.Add(result);
+            if (paths.Count >= MaxNumberOfPaths) throw new InvalidOperationException($"too many paths: {paths.Count} > {MaxNumberOfPaths} for {ShortId}");
+            var p = net.GetProbabilty(paths, ouput);
+            var probabilty = p * parentProbabilty;
+            var nested = ouput as GraphNet;
+            if (nested == null)
+            {
+                var result = new Result(input, ouput, paths, probabilty);
+                results.Add(result);
+            }
+            else
+            {
+                nested.Outputs.ToList().ForEach(o => nested.AddResult(input, o, results, probabilty));
+            }
         }
 
         public Node GetNode(object value)
@@ -431,6 +561,24 @@ namespace graph.network.core
         public List<Edge> AllEdges()
         {
             return graph.Edges.ToList();
+        }
+
+        public List<Node> AllOutputs()
+        {
+            var result = new List<Node>();
+            Outputs.ForEach(o =>
+            {
+                if (o.IsGraphNet)
+                {
+                    result.AddRange(((GraphNet)o).AllOutputs());
+                }
+                else
+                {
+                    result.Add(o);
+                }
+            });
+
+            return result;
         }
     }
 }

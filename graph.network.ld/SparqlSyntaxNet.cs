@@ -1,4 +1,7 @@
-﻿namespace graph.network.ld
+﻿using System.Collections.Generic;
+using graph.network.core;
+
+namespace graph.network.ld
 {
 
     public class SparqlSyntaxNet : LinkedDataNet
@@ -13,14 +16,20 @@
             Add("distinct", "after", "select");
             Add("where", "after", "*");
             Add("{", "after", "where");
-            Add("?s", "a", "variable");
-            Add("?p", "a", "variable");
-            Add("?o", "a", "variable");
-            Add("variable", "after", "{");
+            Add("?s", "is-a", "subejct");
+            Add("?p", "is-a", "predicate");
+            Add("?o", "is-a", "object");
+            Add("subejct", "is-a", "variable");
+            Add("predicate", "is-a", "variable");
+            Add("object", "is-a", "variable");
+            Add("subejct", "after", "{");
             Add("variable", "after", "distinct");
-            Add("variable", "after", "variable");
+            Add("predicate", "after", "subejct");
+            Add("object", "after", "predicate");
             Add("}", "after", ".");
-            Add(".", "after", "variable");
+            Add("}", "after", "object");
+            Add(".", "after", "object");
+            Add("a", "after", "subejct");
 
 
             Outputs.Add(Node("select"));
@@ -32,6 +41,13 @@
             Outputs.Add(Node("?p"));
             Outputs.Add(Node("?o"));
             Outputs.Add(Node("distinct"));
+            Outputs.Add(Node("a"));
+            Outputs.Add(Node("."));
+        }
+
+        public override IEnumerable<Node> GetInterface()
+        {
+            return Outputs.AsReadOnly();
         }
     }
 }

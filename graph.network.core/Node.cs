@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace graph.network.core
 {
-    public class Node
+    public class Node : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
         Dictionary<string, object> properties = new Dictionary<string, object>();
 
         public bool UseEdgesAsInterface { get; set; } = true;
@@ -13,15 +16,18 @@ namespace graph.network.core
         public object Value { get; }
 
         public virtual List<Edge> Edges { get; set; } = new List<Edge>();
-        public virtual List<Node> DependentNodes { get; private set; } = new List<Node>();
+        private Dictionary<GraphNet,List<Node>> dependentNodes { get;} = new Dictionary<GraphNet, List<Node>>();
 
         public virtual bool RemoveOrphanedEdgeObjs { get; set; } = true;
         public object Result { get; set; }
+
+        public double CurrentProbabilty { get; set; } = 1;
 
         public Node(object value)
         {
             Value = value;
             Result = value;
+            ShortId = ToString();
         }
 
         public virtual void OnAdd(GraphNet graph)
@@ -36,20 +42,28 @@ namespace graph.network.core
 
         public static void BaseOnAdd(Node node, GraphNet graph)
         {
-            //NOTE: is this OK to just clear these (think about multi nested GraphNets)
-            node.DependentNodes.Clear();
+            node.GetDependentNodes(graph).Clear();
             node.Edges.ForEach(e =>
             {
                 if (e.Obj != node && !graph.ContainsNode(e.Obj))
                 {
-                    node.DependentNodes.Add(e.Obj);
+                    node.GetDependentNodes(graph).Add(e.Obj);
                 }
                 if (e.Subject != node && !graph.ContainsNode(e.Subject))
                 {
-                    node.DependentNodes.Add(e.Subject);
+                    node.GetDependentNodes(graph).Add(e.Subject);
                 }
                 graph.Add(e);
             });
+        }
+
+        public virtual List<Node> GetDependentNodes(GraphNet graph)
+        {
+            if (!dependentNodes.ContainsKey(graph))
+            {
+                dependentNodes[graph] = new List<Node>();
+            }
+            return dependentNodes[graph];
         }
 
         public virtual void OnProcess(GraphNet graph, Node input, List<NodePath> results)
@@ -70,7 +84,7 @@ namespace graph.network.core
                 graph.Remove(e);
             }
 
-            node.DependentNodes.ForEach(n =>
+            node.GetDependentNodes(graph).ForEach(n =>
             {
                 if (graph.ContainsNode(n))
                 {
@@ -86,7 +100,10 @@ namespace graph.network.core
         public static bool BaseIsPathValid(Node node, GraphNet graph, NodePath path)
         {
             if (path.HasLoop) return false;
-            var passesThroughAnOutputOrThisNode = path.Skip(1).Take(path.Count - 2).Any(n => n.Equals(node) || graph.Outputs.Contains(n));
+            if (path.Count ==0) return false;
+            if (path[0].Value.Equals(path[path.Count-1].Value)) return false;
+            var middle = path.Skip(1).Take(path.Count - 2);
+            var passesThroughAnOutputOrThisNode = middle.Any(n => n.Equals(node) || graph.Outputs.Contains(n) || graph.Inputs.Contains(n));
             return !passesThroughAnOutputOrThisNode;
         }
 
@@ -101,7 +118,7 @@ namespace graph.network.core
         public virtual IEnumerable<Node> GetInterface()
         {
             //NOTE: could cache this 
-            return Edges.Count > 0 && UseEdgesAsInterface ? Edges.Select(e => e.Obj) : new List<Node> { this };
+            return Edges.Count > 0 && UseEdgesAsInterface ? Edges.Where(e=> !e.Internal).Select(e => e.Obj) : new List<Node> { this };
         }
 
         public Node AddEdge(string predicate, object obj, GraphNet gn)
@@ -131,14 +148,10 @@ namespace graph.network.core
             return Value?.ToString();
         }
 
-        public virtual string ShortId
-        {
-            get { return ToString(); }
-        }
-
-
+        public virtual string ShortId { get; set; }
 
         public override bool Equals(object obj)
+
         {
             if (Value == null && obj != null) return false;
             if (Value != null && obj == null) return false;

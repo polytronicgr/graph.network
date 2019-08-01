@@ -26,12 +26,9 @@ namespace graph.network.ld
         {
             InParseMode = false;
             var examples = new List<NodeExample>();
-
             foreach (var query in queries)
             {
                 var tokeniser = new SparqlTokeniser(ParsingTextReader.Create(new StringReader(query)), SparqlQuerySyntax.Sparql_1_1);
-
-
                 var lastWord = Node("");
                 var token = tokeniser.GetNextToken();
                 while (token != null && !(token is EOFToken))
@@ -43,9 +40,7 @@ namespace graph.network.ld
                     lastWord = node;
                 }
             }
-
             Train(examples.ToArray());
-
             InParseMode = true;
         }
 

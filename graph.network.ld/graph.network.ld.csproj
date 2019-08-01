@@ -59,8 +59,10 @@
     <Compile Include="LinkedDataNet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PredicateNet.cs" />
+    <Compile Include="QueryGraphNet.cs" />
     <Compile Include="SparqlSyntaxNet.cs" />
     <Compile Include="TextMatchingNode.cs" />
+    <Compile Include="TokenNode.cs" />
     <Compile Include="UriNode.cs" />
   </ItemGroup>
   <ItemGroup>

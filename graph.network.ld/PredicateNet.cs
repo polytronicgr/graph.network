@@ -11,10 +11,11 @@ namespace graph.network.ld
     public class PredicateNet : LinkedDataNet
     {
         public string Prefix { get; }
-        public PredicateNet(string prefix, Uri ontology, Action<Uri, GraphNet> loadEdges = null) : base(ontology.ToString())
+        public PredicateNet(string prefix, Uri ontology, Action<Uri, GraphNet> loadEdges = null) : base(IRI_PREFIX + prefix)
         {
             Prefixes.Add(prefix, ontology.ToString());
-            Add(this, "prefix", prefix);
+            Prefix = prefix;
+            Add(this, Prefix, GetPrefixNamespaceNode());
 
             if (loadEdges == null)
             {
@@ -26,9 +27,24 @@ namespace graph.network.ld
             }
             var predicates = AllEdges()
                 .Where(e => e.Predicate.Value.ToString() == "http://www.w3.org/2000/01/rdf-schema#domain")
-                .Select(e => e.Subject);
+                .Select(e => e.Subject)
+                .Distinct();
             Outputs.AddRange(predicates);
-            Prefix = prefix;
+
+
+        }
+
+        public Node GetPrefixNamespaceNode()
+        {
+            return Node(IRI_PREFIX + Prefix.Replace(":", "_namespace"));
+        }
+
+        public override string ShortId
+        {
+            get
+            {
+                return Prefix;
+            }
         }
 
         public override void TrainFromQueries(params string[] queries)
@@ -64,12 +80,6 @@ namespace graph.network.ld
                     beforeLastToken = lastToken;
                     lastToken = token;
                 }
-
-
-
-         
-               
-
             }
 
             Train(examples.ToArray());

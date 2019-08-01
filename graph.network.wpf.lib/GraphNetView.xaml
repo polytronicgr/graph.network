@@ -11,9 +11,9 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <Grid.Resources>
-            <DataTemplate x:Key="nodeTemplate" DataType="{x:Type gn:Node}">
-                <StackPanel Orientation="Horizontal" Margin="5" MouseDown="OnNodeDoubleClick">
-                    <TextBlock x:Name="text" Text="{Binding Path=ShortId, Mode=OneWay}" Foreground="White" />
+            <DataTemplate x:Key="nodeTemplate" DataType="{x:Type gn:Node}" >
+                <StackPanel Orientation="Horizontal" Margin="5" MouseDown="OnNodeDoubleClick" >
+                    <TextBlock x:Name="text" Text="{Binding Path=ShortId, Mode=OneWay}" Foreground="White" ToolTip="{Binding Path=Result, Mode=OneWay}" />
                 </StackPanel>
                 <DataTemplate.Triggers>
                     <DataTrigger Binding="{Binding IsGraphNet}" Value="true">
@@ -25,23 +25,26 @@
             <Style TargetType="{x:Type graphsharp:VertexControl}">
                 <Setter Property="Template">
                     <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type graphsharp:VertexControl}">
+                        <ControlTemplate TargetType="{x:Type graphsharp:VertexControl}" >
                             <Border BorderBrush="White" 
                                     Background="Black"
                                     BorderThickness="2"
                                     CornerRadius="10,10,10,10"
-                                    Padding="{TemplateBinding Padding}">
+                                    Padding="{TemplateBinding Padding}"
+                                    Opacity="{Binding Path=CurrentProbabilty, Mode=OneWay}"
+                                    >
                                 <ContentPresenter Content="{TemplateBinding Vertex}" ContentTemplate="{StaticResource nodeTemplate}"/>
                                 <Border.Effect>
                                     <DropShadowEffect BlurRadius="2" Color="LightGray"  Opacity="0.3" Direction="315"/>
                                 </Border.Effect>
                             </Border>
+                           
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
             </Style>
 
-            <Style TargetType="{x:Type graphsharp:EdgeControl}">
+            <Style TargetType="{x:Type graphsharp:EdgeControl}" >
                 <Style.Resources>
                     <ToolTip x:Key="ToolTipContent">
                         <StackPanel>
@@ -49,7 +52,12 @@
                         </StackPanel>
                     </ToolTip>
                 </Style.Resources>
-                <Setter Property="ToolTip" Value="{StaticResource ToolTipContent}"/>
+                <Style.Setters>
+                    <!--<Setter Property="Opacity" Value="{Binding RelativeSource={RelativeSource Self},Path=Edge.CurrentProbabilty, Mode=OneWay}"/>-->
+                    <Setter Property="StrokeThickness" Value="{ Binding Path=CurrentProbabilty}"/>
+                    <Setter Property="ToolTip" Value="{StaticResource ToolTipContent}"/>
+                </Style.Setters>
+
             </Style>
         </Grid.Resources>
         <Grid.RowDefinitions>

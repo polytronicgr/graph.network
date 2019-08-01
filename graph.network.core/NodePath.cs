@@ -21,7 +21,6 @@ namespace graph.network.core
                 MarkLooped(edge.Obj);
                 Add(edge.Obj);
                 lastObj = edge.Obj;
-                
             }
         }
 

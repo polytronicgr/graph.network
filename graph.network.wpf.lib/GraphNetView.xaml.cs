@@ -11,6 +11,13 @@ using System.Windows.Input;
 
 namespace graph.network.wpf.lib
 {
+    /*
+    public class GraphViewModel : BidirectionalGraph<Node, Edge>, INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+    }
+    */
+
     public class GraphNetViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -32,7 +39,7 @@ namespace graph.network.wpf.lib
                 net = value;
                 Graph = new BidirectionalGraph<Node, Edge>();
                 Graph.AddVerticesAndEdgeRange(net.AllEdges());
-                Outputs = new ObservableCollection<Node>(net.Outputs);
+                Outputs = new ObservableCollection<Node>(net.AllOutputs());
                 PropertyChanged(this, new PropertyChangedEventArgs(nameof(Graph)));
                 PropertyChanged(this, new PropertyChangedEventArgs(nameof(Outputs)));
             }
@@ -45,43 +52,108 @@ namespace graph.network.wpf.lib
             {
                 //if (_input == value) return;
                 _input = value;
-                var input = Net.Node(value);
-                results = Net.Rank(input);
-                Outputs = new ObservableCollection<Node>(Net.Outputs);
-                var orderedOuputs = results.Select(r => r.Output).ToList();
-                Outputs = new ObservableCollection<Node>(Outputs.OrderBy(i =>
+                if (string.IsNullOrEmpty(value))
                 {
-                    var index = orderedOuputs.IndexOf(i);
-                    if (index == -1) return int.MaxValue;
-                    return index;
-                }).ToList());
-                if (results.Count > 0)
-                {
-                    var result = results[0];
-                    SetResult(result);
+                    foreach (var edge in Graph.Edges)
+                    {
+                        edge.CurrentProbabilty = 1;
+                        edge.Obj.CurrentProbabilty = 1;
+                        edge.Subject.CurrentProbabilty = 1;
+                    }
+                    PropertyChanged(this, new PropertyChangedEventArgs(nameof(Outputs)));
+                    PropertyChanged(this, new PropertyChangedEventArgs(nameof(Graph)));
                 }
-                PropertyChanged(this, new PropertyChangedEventArgs(nameof(Outputs)));
+                else
+                {
+                    //var input = Net.Node(new Node(value));
+                    var input = Net.Node(value);
+                    Graph = new BidirectionalGraph<Node, Edge>();
+               
+                    Net.OnGraphSnapshot = (g) => 
+                    {
+                        foreach (var edge in g.Edges)
+                        {
+                            var edgeInGraph = Graph.Edges
+                                .Where(e =>
+                                    e.Subject.Value.Equals(edge.Subject.Value) &&
+                                    e.Predicate.Value.Equals(edge.Predicate.Value) &&
+                                    e.Obj.Value.Equals(edge.Obj.Value))
+                                .FirstOrDefault();
+                            if (edgeInGraph == null)
+                            {
+                                Graph.AddVerticesAndEdge(edge);
+                            }
+                        }       
+                    };
+                 
+                    results = Net.Rank(input);
+                    Net.OnGraphSnapshot = null;
+                    Outputs = new ObservableCollection<Node>(Net.AllOutputs());
+                    var orderedOuputs = results.Select(r => r.Output).ToList();
+                    Outputs = new ObservableCollection<Node>(Outputs.OrderBy(i =>
+                    {
+                        var index = orderedOuputs.IndexOf(i);
+                        if (index == -1) return int.MaxValue;
+                        return index;
+                    }).ToList());
+                    if (results.Count > 0)
+                    {
+                        var result = results[0];
+                        SetResult(result);
+                    }
+                    PropertyChanged(this, new PropertyChangedEventArgs(nameof(Outputs)));
+                    PropertyChanged(this, new PropertyChangedEventArgs(nameof(Graph)));
+                }
 
             }
         }
 
         private void SetResult(Result result)
         {
-            Graph = new BidirectionalGraph<Node, Edge>();
+            foreach (var edge in Graph.Edges)
+            {
+                edge.CurrentProbabilty = 0.05;
+            }
+
+            foreach (var v in Graph.Vertices)
+            {
+                v.CurrentProbabilty = 0.1;
+            }
+
+            if (result == null) return;
+            result.Input.CurrentProbabilty = 1;
+            result.Output.CurrentProbabilty = 1;
             if (result != null)
             {
                 foreach (var path in result.Paths)
                 {
-                    Graph.AddVerticesAndEdgeRange(path.Edges);
-                    Graph.AddVerticesAndEdge(new Edge(result.Input, Net.Node("in"), path[0]));
-                    Graph.AddVerticesAndEdge(new Edge(path[path.Count - 1], Net.Node("out"), result.Output));
-                    if (result.Output.Result != null && result.Output.Result.ToString() != result.Output.ShortId)
+                    foreach (var edge in path.Edges)
                     {
-                        Graph.AddVerticesAndEdge(new Edge(result.Output, Net.Node("result"), new Node(result.Output.Result)));
+                        var edgeInGraph = Graph.Edges
+                            .Where(e => 
+                                e.Subject.Value.Equals(edge.Subject.Value) &&
+                                e.Predicate.Value.Equals(edge.Predicate.Value) &&
+                                e.Obj.Value.Equals(edge.Obj.Value))
+                            .FirstOrDefault();
+                        if (edgeInGraph != null)
+                        {
+                            edgeInGraph.CurrentProbabilty = 1;
+                            edgeInGraph.Obj.CurrentProbabilty = 1;
+                            edgeInGraph.Subject.CurrentProbabilty = 1;
+                        }
+                        else
+                        {
+                            edge.CurrentProbabilty = 1;
+                            edge.Obj.CurrentProbabilty = 1;
+                            edge.Subject.CurrentProbabilty = 1;
+                        }
+
                     }
                 }
             }
-
+            //var x = Graph.Edges;
+            //Graph = new BidirectionalGraph<Node, Edge>();
+            //Graph.AddVerticesAndEdgeRange(x);
             PropertyChanged(this, new PropertyChangedEventArgs(nameof(Graph)));
             Examples = Net.GetExamples(result);
             PropertyChanged(this, new PropertyChangedEventArgs(nameof(Examples)));
@@ -107,10 +179,10 @@ namespace graph.network.wpf.lib
             {
                 var graphNet = (GraphNet)node;
                 var g = new BidirectionalGraph<Node, Edge>();
-                //TODO: need to find a way of just gettin paths from the inputs (need to think about this)
-                g.AddVerticesAndEdgeRange(graphNet.AllEdges());
+                  //TODO: need to find a way of just gettin paths from the inputs (need to think about this)
+                  g.AddVerticesAndEdgeRange(graphNet.AllEdges());
                 Graph = g;
-                Outputs = new ObservableCollection<Node>(graphNet.Outputs);
+                Outputs = new ObservableCollection<Node>(graphNet.AllOutputs());
                 PropertyChanged(this, new PropertyChangedEventArgs(nameof(Graph)));
                 PropertyChanged(this, new PropertyChangedEventArgs(nameof(Outputs)));
 
@@ -137,6 +209,7 @@ namespace graph.network.wpf.lib
             if (e.PropertyName == nameof(model.Graph))
             {
                 graphLayout.Graph = model.Graph;
+                //graphLayout.Relayout();
             }
             if (e.PropertyName == nameof(model.Outputs))
             {

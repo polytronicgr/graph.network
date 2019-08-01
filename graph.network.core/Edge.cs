@@ -1,9 +1,12 @@
 ﻿using QuickGraph;
+using System.ComponentModel;
 
 namespace graph.network.core
 {
-    public class Edge : TaggedEdge<Node, Node>
+    public class Edge : TaggedEdge<Node, Node>, INotifyPropertyChanged
     {
+
+        public event PropertyChangedEventHandler PropertyChanged;
         public Edge(Node subject, Node predicate, Node obj) : base(subject, obj, predicate)
         {
             Subject = subject;
@@ -15,12 +18,14 @@ namespace graph.network.core
         public Node Predicate { get; }
         public Node Obj { get; }
         public bool Internal { get; set; }
+        public bool Inverted { get; set; }
 
         public string ShortId
         {
             get { return Predicate?.ShortId; }
         }
 
+        public double CurrentProbabilty { get; set; } = 1;
 
         public override bool Equals(object obj)
         {

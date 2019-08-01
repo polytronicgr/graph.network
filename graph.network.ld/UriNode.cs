@@ -9,16 +9,16 @@ namespace graph.network.ld
 
         public UriNode(string uri) : base(uri)
         {
-            var trimmed = uri.TrimEnd('#', '/');
-            var start = trimmed.Contains('#') ? trimmed.LastIndexOf('#') : trimmed.LastIndexOf('/');
-            shortId = trimmed.Substring(start + 1).Trim();
+            shortId = GetShortId(uri);
             Result = shortId;
         }
 
-        //public override bool IsPathValid(GraphNet graph, NodePath path)
-        //{
-        //    return true;
-        //}
+        public static string GetShortId(string uri)
+        {
+            var trimmed = uri.TrimEnd('#', '/');
+            var start = trimmed.Contains('#') ? trimmed.LastIndexOf('#') : trimmed.LastIndexOf('/');
+            return trimmed.Substring(start + 1).Trim();
+        }
 
         public override string ShortId
         {
