@@ -83,20 +83,13 @@ namespace graph.network.core
         {
             var batchSize = lables.Count;
             if (batchSize == 0) return;
-            // specifies a 2-layer neural network with one hidden layer of 20 neurons
+
             net = new Net<double>();
             net.AddLayer(new InputLayer(width, height, depth));
-
-            // declare 20 neurons
-            net.AddLayer(new FullyConnLayer(20));
-
-            // declare a ReLU (rectified linear unit non-linearity)
+            var convOne = new ConvLayer(6, height, 1) { Stride = 3, Pad = 2 };
+            net.AddLayer(convOne);
             net.AddLayer(new ReluLayer());
-
-            // declare a fully connected layer that will be used by the softmax layer
             net.AddLayer(new FullyConnLayer(numberOfClasses));
-
-            // declare the linear classifier on top of the previous hidden layer
             net.AddLayer(new SoftmaxLayer(numberOfClasses));
 
             var trainer = new AdamTrainer<double>(net) { LearningRate = 0.01, BatchSize = batchSize};

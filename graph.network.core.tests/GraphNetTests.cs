@@ -8,8 +8,6 @@ namespace graph.network.core.tests
     [TestFixture]
     public class GraphNetTests
     {
-        //TODO: add UI
-        //TODO: paris is the capital of france and path convolution
         //TODO: add text predictor and set finder tests
         //TODO: A/B testing of nodes (training based on hard coded)
         //TODO: think about issues with add/registering nodes and dependent nodes
@@ -47,6 +45,7 @@ namespace graph.network.core.tests
             var gn = new GraphNet("gn", maxNumberOfPaths: 5);
             gn.Add("london", "is_a", "city");
             gn.Add("london", "capital_of", "uk");
+            gn.Add("ny", "capital_of", "usa");
             gn.Add("paris", "is_a", "city");
             gn.Add("york", "is_a", "city");
             gn.Add("paris", "capital_of", "france");
@@ -77,10 +76,14 @@ namespace graph.network.core.tests
                   new NodeExample(gn.Node("london is a city"), gn.Node(true))
                 , new NodeExample(gn.Node("london is the caplital of uk"), gn.Node(true))
                 , new NodeExample(gn.Node("london is the caplital of france"), gn.Node(false))
+                , new NodeExample(gn.Node("london is the caplital of usa"), gn.Node(false))
+                , new NodeExample(gn.Node("ny is the caplital of usa"), gn.Node(true))
+                , new NodeExample(gn.Node("ny is the caplital of uk"), gn.Node(false))
                 , new NodeExample(gn.Node("london is a country"), gn.Node(false))
                 , new NodeExample(gn.Node("uk is a country"), gn.Node(true))
                 , new NodeExample(gn.Node("uk is a city"), gn.Node(false))
                 , new NodeExample(gn.Node("unknown is a city"), gn.Node(false))
+
             );
 
             //now we can ask questions about entities that are in the knowlage graph but the training has not seen
@@ -89,9 +92,9 @@ namespace graph.network.core.tests
             Assert.AreEqual(true, gn.Predict("is france a country ?"));
             Assert.AreEqual(false, gn.Predict("france is a city"));
             Assert.AreEqual(true, gn.Predict("york is a city"));
-            //TODO: Assert.AreEqual(false, gn.Predict("ding-dong is a city"));
-            //TODO: Assert.AreEqual("True", gn.Predict(new DynamicNode("paris is the capital of france", tokeniser)).Result());
-            //TODO:Assert.AreEqual("False", gn.Predict(new DynamicNode("paris is the capital of the uk", tokeniser)).Result());
+            Assert.AreEqual(true, gn.Predict("paris is the capital of france"));
+            Assert.AreEqual(false, gn.Predict("paris is the capital of uk"));
+            //Assert.AreEqual(false, gn.Predict("other is a city"));
         }
 
         [Test]
@@ -282,8 +285,9 @@ namespace graph.network.core.tests
             Assert.AreEqual("bad", gn.Predict("red king"));
             Assert.AreEqual(17, gn.Predict("5 + 12"));
             Assert.AreEqual(27, gn.Predict("7 + 20"));
-            Assert.AreEqual(true, gn.Predict("paris is a city"));
             Assert.AreEqual(false, gn.Predict("paris is a country"));
+            Assert.AreEqual(true, gn.Predict("paris is a city"));
+
 
             //TODO: Assert.AreEqual(27, gn.Predict("7 + 7"));
         }

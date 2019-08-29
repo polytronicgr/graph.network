@@ -312,6 +312,7 @@ namespace graph.network.core
             var allNodes = new List<Node>(graph.Vertices);
             allNodes.AddRange(graph.Edges.Select(e => e.Predicate).Distinct());
             allNodes = allNodes.Distinct().ToList();
+            allNodes = allNodes.OrderBy(n => n.Value.ToString()).ToList(); //TODO: simple sort - think about nodes in word vetor space
             return allNodes;
         }
 
