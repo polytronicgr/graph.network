@@ -8,6 +8,7 @@ namespace graph.network.core.tests
     [TestFixture]
     public class GraphNetTests
     {
+        //TODO: add readme and make UI a bit simpler to use
         //TODO: add text predictor and set finder tests
         //TODO: A/B testing of nodes (training based on hard coded)
         //TODO: think about issues with add/registering nodes and dependent nodes

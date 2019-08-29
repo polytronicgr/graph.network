@@ -372,7 +372,6 @@ namespace graph.network.wpf.app
 
             //train the master GraphNet with some examples
             gn.Train(
-
                 new Example(gn.Node("spider man"), "good"),
                 new Example(gn.Node("green goblin"), "bad"),
                 new Example(gn.Node("4 + 1"), 5),

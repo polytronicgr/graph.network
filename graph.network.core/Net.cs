@@ -86,8 +86,7 @@ namespace graph.network.core
 
             net = new Net<double>();
             net.AddLayer(new InputLayer(width, height, depth));
-            var convOne = new ConvLayer(6, height, 1) { Stride = 3, Pad = 2 };
-            net.AddLayer(convOne);
+            net.AddLayer(new ConvLayer(6, height, 1) { Stride = 3, Pad = 2 });
             net.AddLayer(new ReluLayer());
             net.AddLayer(new FullyConnLayer(numberOfClasses));
             net.AddLayer(new SoftmaxLayer(numberOfClasses));
