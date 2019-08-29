@@ -14,6 +14,7 @@ namespace graph.network.ld
             Add("select", "after", "");
             Add("*", "after", "select");
             Add("distinct", "after", "select");
+            Add("*", "after", "distinct");
             Add("where", "after", "*");
             Add("{", "after", "where");
             Add("?s", "is-a", "subejct");

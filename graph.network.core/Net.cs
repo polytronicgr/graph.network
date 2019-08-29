@@ -86,10 +86,25 @@ namespace graph.network.core
 
             net = new Net<double>();
             net.AddLayer(new InputLayer(width, height, depth));
+ 
+            net.AddLayer(new ConvLayer(3, 6, 8) { Stride = 3, Pad = 2 });
+            net.AddLayer(new ReluLayer());
+            net.AddLayer(new PoolLayer(3, 3) { Stride = 1, Pad = 2 });
+            net.AddLayer(new ConvLayer(3, 6, 16) { Stride = 1, Pad = 2 });
+            net.AddLayer(new ReluLayer());
+
+            net.AddLayer(new FullyConnLayer(numberOfClasses));
+            net.AddLayer(new SoftmaxLayer(numberOfClasses));
+
+            /*
+            //faster
+            net = new Net<double>();
+            net.AddLayer(new InputLayer(width, height, depth));
             net.AddLayer(new ConvLayer(6, height, 1) { Stride = 3, Pad = 2 });
             net.AddLayer(new ReluLayer());
             net.AddLayer(new FullyConnLayer(numberOfClasses));
             net.AddLayer(new SoftmaxLayer(numberOfClasses));
+            */
 
             var trainer = new AdamTrainer<double>(net) { LearningRate = 0.01, BatchSize = batchSize};
 

@@ -150,8 +150,8 @@ namespace graph.network.wpf.app
                 "select * where { ?s a p:City . ?s p:code ?code }",
                 "select * where { ?s a p:Country . ?s p:flag ?flag }" ,
                 "select * where { ?s a p:Country . ?s p:nationalAnthem ?nationalAnthem }",
-                "select * where { ?s a p:Country . ?s p:name ?name }",
-                "select * where { ?s p:name ?name }",
+                "select distinct * where { ?s a p:Country . ?s p:name ?name }",
+                "select distinct * where { ?s p:name ?name }",
                 "select * where { ?s a p:Place . ?s p:code ?code }"
                 );
 
