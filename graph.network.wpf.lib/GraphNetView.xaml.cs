@@ -244,5 +244,20 @@ namespace graph.network.wpf.lib
                 model.Net = value;
             }
         }
+
+        public string InputText
+        {
+            get { return inputText.Text; }
+            set
+            {
+                inputText.Text = value;
+                runButton.Focus();
+            }
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            model.Input = inputText.Text;
+        }
     }
 }

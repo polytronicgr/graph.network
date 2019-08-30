@@ -12,14 +12,22 @@
             <RowDefinition Height="Auto" ></RowDefinition>
             <RowDefinition Height="*" ></RowDefinition>
         </Grid.RowDefinitions>
-        <ComboBox Grid.Row="0" SelectionChanged="ComboBox_SelectionChanged">
-            <ComboBoxItem  Name="cbi1">Super Heros (type: spider_man)</ComboBoxItem>
-            <ComboBoxItem  Name="cbi2">Cities (type: paris is city)</ComboBoxItem>
-            <ComboBoxItem  Name="cbi3">Calulator (type: 4 + 3)</ComboBoxItem>
-            <ComboBoxItem  Name="cbi4">Multi Graph Example (type: london is a city or type: 3 * 4 etc)</ComboBoxItem>
-            <ComboBoxItem  Name="cbi5">Simple Sparql Syntax (type: select * where)</ComboBoxItem>
-            <ComboBoxItem  Name="cbi6">Sparql Query Builder (type: select * where)</ComboBoxItem>
-        </ComboBox>
+        <Grid Grid.Row="0" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="50"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Column="0">Model</Label>
+            <ComboBox Grid.Column="1" SelectionChanged="ComboBox_SelectionChanged" x:Name="modelCombo">
+                <ComboBoxItem  Name="cbi1" Tag="spider_man">Super Heros (spider_man, red_king, hulk)</ComboBoxItem>
+                <ComboBoxItem  Name="cbi2" Tag="paris is city">Cities (paris is city, uk a country)</ComboBoxItem>
+                <ComboBoxItem  Name="cbi3" Tag="4 + 3">Calulator (4 + 3, 7 -2, 6 * 8)</ComboBoxItem>
+                <ComboBoxItem  Name="cbi4" Tag="london is a city">Multi Graph Example (london is a city, 3 * 4, super man)</ComboBoxItem>
+                <ComboBoxItem  Name="cbi5" Tag="select * where">Simple Sparql Syntax (select * where)</ComboBoxItem>
+                <ComboBoxItem  Name="cbi6" Tag="select * where {?s p:">Sparql Query Builder (select * where {?s p:)</ComboBoxItem>
+            </ComboBox>
+        </Grid>
+
         <lib:GraphNetView x:Name="test" Grid.Row="1"></lib:GraphNetView>
     </Grid>
 </Window>

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace graph.network.wpf.app
 {
@@ -420,6 +421,17 @@ namespace graph.network.wpf.app
             {
                 Dispatcher.BeginInvoke(new Action(() => test.Net = LoadQueryNet()));
             }
+
+            var item = modelCombo.SelectedItem as ComboBoxItem;
+            if (item == null)
+            {
+                test.InputText = "";
+            }
+            else
+            {
+                test.InputText = item.Tag.ToString();
+            }
+            
         }
     }
 }
