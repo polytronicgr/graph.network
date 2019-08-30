@@ -28,5 +28,3 @@ gn.Train(gn.NewExample("spider_man", "good"), gn.NewExample("green_goblin", "bad
 Assert.AreEqual("good", gn.Predict("hulk"));
 Assert.AreEqual("bad", gn.Predict("red_king"));
 ```
-
-![Super Heros](supers.JPG)
