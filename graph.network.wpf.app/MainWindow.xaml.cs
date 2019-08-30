@@ -237,14 +237,17 @@ namespace graph.network.wpf.app
         {
             var supers = new GraphNet("supers", maxPathLenght: 20);
             supers.LimitNumberOfPaths = true;
-            supers.Add("spider_man", "is_a", "hero");
-            supers.Add("hulk", "is_a", "hero");
-            supers.Add("green_goblin", "is_a", "villain");
-            supers.Add("red_king", "is_a", "villain");
-            supers.Add("trump", "is_a", "villain");
-            supers.Add("hero", "is", "good", true);
-            supers.Add("villain", "is", "bad", true);
-
+            supers.Add("spider_man", "is_a", "super_hero");
+            supers.Add("hulk", "is_a", "super_hero");
+            supers.Add("green_goblin", "is_a", "super_villain");
+            supers.Add("red_king", "is_a", "super_villain");
+            supers.Add("super_villain", "is_a", "villain");
+            supers.Add("super_hero", "is_a", "hero");
+            supers.Add("hero", "is", "good");
+            supers.Add("hero", "is_not", "bad");
+            supers.Add("villain", "is", "bad");
+            supers.Add("villain", "is_not", "good");
+            supers.SetOutputs("good", "bad");
             supers.Train(new NodeExample(supers.Node("spider_man"), supers.Node("good")),
                 new NodeExample(supers.Node("green_goblin"), supers.Node("bad")));
             return supers;

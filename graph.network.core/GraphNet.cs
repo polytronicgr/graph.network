@@ -30,6 +30,14 @@ namespace graph.network.core
             MaxNumberOfPaths = maxNumberOfPaths;
         }
 
+        public void SetOutputs(params string[] ouputs)
+        {
+            foreach (var output in ouputs)
+            {
+                Outputs.Add(Node(output));
+            }
+        }
+
         public override void OnAdd(GraphNet graph)
         {
             if (Edges.Count == 0)
