@@ -45,8 +45,8 @@ namespace graph.network.core.tests
         [Test]
         public void SimpleQuestionAndAnswer()
         {
-            //create a small knowlage graph with information about areas and a couple of true/false output nodes
-            var gn = new GraphNet("gn", maxNumberOfPaths: 5);
+            //create a small knowledge graph with information about areas and a couple of true/false output nodes
+            var gn = new GraphNet("cities", maxNumberOfPaths: 5);
             gn.Add("london", "is_a", "city");
             gn.Add("london", "capital_of", "uk");
             gn.Add("ny", "capital_of", "usa");
@@ -58,7 +58,7 @@ namespace graph.network.core.tests
             gn.Add(gn.Node(true), true);
             gn.Add(gn.Node(false), true);
 
-            //register a NLP tokeniser node that creates an edge for each word and 
+            //register an NLP tokeniser node that creates an edge for each word and 
             //also add these words to the true and false output nodes so that we can
             //map the paths between words: (london >> is_a >> city >> true)
             gn.RegisterDynamic("ask", (node, graph) =>
@@ -75,7 +75,7 @@ namespace graph.network.core.tests
             //set new nodes to default to creating this 'ask' node
             gn.DefaultInput = "ask";
 
-            //train some examples of true and false statments using the NLP 'ask' node as the input 
+            //train some examples of true and false statements using the NLP 'ask' node as the input 
             gn.Train(
                   new NodeExample(gn.Node("london is a city"), gn.Node(true))
                 , new NodeExample(gn.Node("london is the caplital of uk"), gn.Node(true))
@@ -90,7 +90,7 @@ namespace graph.network.core.tests
 
             );
 
-            //now we can ask questions about entities that are in the knowlage graph but the training has not seen
+            //now we can ask questions about entities that are in the knowledge graph but the training has not seen
             Assert.AreEqual(true, gn.Predict("paris is a city"));
             Assert.AreEqual(false, gn.Predict("paris is a country"));
             Assert.AreEqual(true, gn.Predict("is france a country ?"));
