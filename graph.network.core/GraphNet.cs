@@ -221,6 +221,11 @@ namespace graph.network.core
             foreach (Example example in examples)
             {
                 var paths = GetPaths(example);
+                //TODO: check that this trim is safe
+                if (paths.Count >= MaxNumberOfPaths && LimitNumberOfPaths)
+                {
+                    paths = paths.OrderBy(p => p.Count).Take(MaxNumberOfPaths - 1).ToList();
+                }
                 if (paths.Count > 0)
                 {
                     var first = paths[0];

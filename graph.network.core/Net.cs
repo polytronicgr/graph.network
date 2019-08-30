@@ -93,6 +93,7 @@ namespace graph.network.core
             net.AddLayer(new ConvLayer(3, 3, 16) { Stride = 1, Pad = 2 });
             net.AddLayer(new ReluLayer());
             //net.AddLayer(new PoolLayer(3, 3) { Stride = 3 });
+            //net.AddLayer(new ConvLayer(3, 3, 20) { Stride = 1, Pad = 2 });
             net.AddLayer(new FullyConnLayer(numberOfClasses));
             net.AddLayer(new SoftmaxLayer(numberOfClasses));
 
