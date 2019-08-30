@@ -1,7 +1,6 @@
 # graph.network
-c# graph based neural network library 
 
-graph.network lets you model any domain as a graph and then train that model to predict answers to questions that draw upon the knowledge within it.
+graph.network is a c# graph convultional neural network library that lets you model any domain as a graph and then train that model to predict answers:
 
 ```csharp
 //1 - create the graph
@@ -25,4 +24,4 @@ Assert.AreEqual("good", gn.Predict("hulk"));
 Assert.AreEqual("bad", gn.Predict("red_king"));
 ```
 
-![Super Heros](supers.jpg)
+![Super Heros](supers.JPG)
