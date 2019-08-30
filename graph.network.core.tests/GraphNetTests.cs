@@ -18,7 +18,7 @@ namespace graph.network.core.tests
         [Test]
         public void SuperHeros()
         {
-            //create a small knowlage graph
+            //1 - create a small knowledge graph
             var gn = new GraphNet("gn", maxPathLenght:10, maxNumberOfPaths: 5);
             gn.Add("spider_man", "is_a", "super_hero");
             gn.Add("hulk", "is_a", "super_hero");
@@ -31,10 +31,10 @@ namespace graph.network.core.tests
             gn.Add("villain", "is", "bad", true);
             gn.Add("villain", "is_not", "good", true);
 
-            //train it with some expected answers
+            //2 - train it with some expected answers
             gn.Train(gn.NewExample("spider_man", "good"), gn.NewExample("green_goblin", "bad"));
 
-            //and it can now predict answers to entities it has not been trained on
+            //3 - predict answers to entities it has not been trained on
             Assert.AreEqual("good", gn.Predict("hulk"));
             Assert.AreEqual("bad", gn.Predict("red_king"));
         }
