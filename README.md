@@ -31,7 +31,8 @@ Assert.AreEqual("bad", gn.Predict("red_king"));
 
 Nodes in the graph can be full C# objects with rich functionally, so traditional object-oriented code exists inside a machine learning framework/graph:
 ```csharp
-            //create a small knowledge graph with information about areas and a couple of true/false output nodes
+            //create a small knowledge graph with information about areas 
+            //and a couple of true/false output nodes
             var gn = new GraphNet("cities", maxNumberOfPaths: 5);
             gn.Add("london", "is_a", "city");
             gn.Add("london", "capital_of", "uk");
@@ -61,7 +62,8 @@ Nodes in the graph can be full C# objects with rich functionally, so traditional
             //set new nodes to default to creating this 'ask' node
             gn.DefaultInput = "ask";
 
-            //train some examples of true and false statements using the NLP 'ask' node as the input 
+            //train some examples of true and false statements using the 
+            //NLP 'ask' node as the input 
             gn.Train(
                   new NodeExample(gn.Node("london is a city"), gn.Node(true))
                 , new NodeExample(gn.Node("london is the caplital of uk"), gn.Node(true))
@@ -76,12 +78,12 @@ Nodes in the graph can be full C# objects with rich functionally, so traditional
 
             );
 
-            //now we can ask questions about entities that are in the knowledge graph but the training has not seen
+            //now we can ask questions about entities that are in the 
+            //knowledge graph but the training has not seen
             Assert.AreEqual(true, gn.Predict("paris is a city"));
             Assert.AreEqual(false, gn.Predict("paris is a country"));
             Assert.AreEqual(true, gn.Predict("is france a country ?"));
             Assert.AreEqual(false, gn.Predict("france is a city"));
             Assert.AreEqual(true, gn.Predict("york is a city"));
-            Assert.AreEqual(true, gn.Predict("paris is the capital of france"));
-            Assert.AreEqual(false, gn.Predict("paris is the capital of uk"));
+            Assert.AreEqual(true, gn.Predict("paris is the capital of france"))
 ```
