@@ -87,12 +87,12 @@ namespace graph.network.core
             net = new Net<double>();
             net.AddLayer(new InputLayer(width, height, depth));
  
-            net.AddLayer(new ConvLayer(3, 6, 8) { Stride = 3, Pad = 2 });
+            net.AddLayer(new ConvLayer(3, 3, 8) { Stride = 1, Pad = 2 });
             net.AddLayer(new ReluLayer());
-            net.AddLayer(new PoolLayer(3, 3) { Stride = 1, Pad = 2 });
-            net.AddLayer(new ConvLayer(3, 6, 16) { Stride = 1, Pad = 2 });
+            net.AddLayer(new PoolLayer(2, 2) { Stride = 2 });
+            net.AddLayer(new ConvLayer(3, 3, 16) { Stride = 1, Pad = 2 });
             net.AddLayer(new ReluLayer());
-
+            //net.AddLayer(new PoolLayer(3, 3) { Stride = 3 });
             net.AddLayer(new FullyConnLayer(numberOfClasses));
             net.AddLayer(new SoftmaxLayer(numberOfClasses));
 
