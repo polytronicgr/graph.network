@@ -1,5 +1,8 @@
 # graph.network
 
+PM> Install-Package graph.network.core -Version 1.0.0
+https://github.com/t-j-durden/graph.network
+
 graph.network is a deep graph convultional neural network library written in C#.
 
 It lets you model any domain as a graph and then train that model to predict answers:

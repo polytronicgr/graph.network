@@ -2,6 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Company>graph.network</Company>
+    <Description>deep graph convultional neural network library</Description>
+    <Authors>t-j-durden</Authors>
+    <RepositoryUrl>https://github.com/t-j-durden/graph.network</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>C#, CNN, Graph, convultional neural network</PackageTags>
+    <PackageProjectUrl>https://github.com/t-j-durden/graph.network</PackageProjectUrl>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
